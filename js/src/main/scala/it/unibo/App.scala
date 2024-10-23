@@ -1,6 +1,6 @@
-package it.nicolasfarabegoli.nicolasfarabegoli
+package it.unibo
 
-import it.nicolasfarabegoli.SharedCode
+import it.unibo.SharedCode
 import org.scalajs.dom
 
 @main

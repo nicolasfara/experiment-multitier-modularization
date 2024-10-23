@@ -1,4 +1,6 @@
-package it.nicolasfarabegoli
+package it.unibo
+
+import it.unibo.SharedCode
 
 @main
 def run(): Unit =
