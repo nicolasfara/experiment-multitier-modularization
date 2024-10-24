@@ -6,10 +6,10 @@ import it.unibo.flexmultimod.tier.Peer
 import scala.quoted.{Expr, Quotes, Type}
 
 object LanguageMacro:
-  inline def asLocalMacro[Value, LocalNode <: Peer, RemoteNode <: Peer](func: Value on RemoteNode)(using placed: Placed[LocalNode]) =
-    ${ asLocalImpl('func, 'placed) }
+  inline def remoteRefMacro[Value, LocalNode <: Peer, RemoteNode <: Peer](func: Value on RemoteNode)(using placed: Placed[LocalNode]) =
+    ${ remoteRefMacroImpl('func, 'placed) }
 
-  private def asLocalImpl[Value, LocalNode <: Peer: Type, RemoteNode <: Peer: Type](
+  private def remoteRefMacroImpl[Value, LocalNode <: Peer: Type, RemoteNode <: Peer: Type](
       expr: Expr[Value on RemoteNode],
       givenData: Expr[Placed[LocalNode]]
   )(using quote: Quotes): Expr[Value] =
@@ -18,8 +18,8 @@ object LanguageMacro:
     val localType = TypeRepr.of[LocalNode]
     if (remoteType =:= localType)
       report.error(s"""
-        The value is placed at peer ${remoteType.show} which is also the current placement (${localType.show}).
+        Attempt to retrieve a remote value but it is placed locally at: ${localType.show}
 
-        To retrieve a value placed on the local placement use the `bind` method instead.
+        To retrieve a local value use the `bind` method instead.
       """.strip())
     '{ ??? }
