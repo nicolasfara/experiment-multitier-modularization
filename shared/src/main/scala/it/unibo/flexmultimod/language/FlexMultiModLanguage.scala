@@ -8,7 +8,7 @@ object FlexMultiModLanguage:
   trait Placed[+PlacedPeer <: Peer]
 
   @showAsInfix
-  infix final case class on[Value, RemotePeer]()
+  infix final case class on[Value, RemotePeer <: Peer]()
 
   trait Language:
     def program[PlacedOn <: Peer](programScope: Placed[PlacedOn] ?=> Unit): Unit
@@ -23,4 +23,4 @@ object FlexMultiModLanguage:
     extension [Value, LocalPeer <: Peer](value: Value on LocalPeer) def bind: Placed[LocalPeer] ?=> Value = ???
 
     extension [Value, LocalNode <: Peer, RemoteNode <: Peer](remoteValue: Value on RemoteNode)(using placed: Placed[LocalNode])
-      inline def remoteRef: Value = asLocalMacro(remoteValue)
+      inline def remoteRef: Value = remoteRefMacro(remoteValue)
