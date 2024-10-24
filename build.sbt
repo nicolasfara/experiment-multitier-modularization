@@ -5,8 +5,14 @@ val scala3Version = "3.6.1"
 ThisBuild / scalaVersion := scala3Version
 ThisBuild / organization := "it.nicolasfarabegoli"
 ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
-ThisBuild / homepage := Some(url("https://github.com/nicolasfara/Template-for-Scala-Multiplatform-Projects"))
-ThisBuild / licenses := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0"))
+ThisBuild / homepage := Some(
+  url(
+    "https://github.com/nicolasfara/Template-for-Scala-Multiplatform-Projects"
+  )
+)
+ThisBuild / licenses := List(
+  "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")
+)
 ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / developers := List(
   Developer(
@@ -20,18 +26,18 @@ ThisBuild / developers := List(
 lazy val root = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("."))
   .configs()
-    .nativeSettings(
-      nativeConfig ~= {
-        _.withLTO(LTO.default)
-          .withMode(Mode.releaseSize)
-          .withGC(GC.immix)
-      }
-    )
-    .jsSettings(
-      libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.0",
-      scalaJSUseMainModuleInitializer := true,
-      scalaJSLinkerConfig ~= { _.withOptimizer(true) }
-    )
+  .nativeSettings(
+    nativeConfig ~= {
+      _.withLTO(LTO.default)
+        .withMode(Mode.releaseSize)
+        .withGC(GC.immix)
+    }
+  )
+  .jsSettings(
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.0",
+    scalaJSUseMainModuleInitializer := true,
+    scalaJSLinkerConfig ~= { _.withOptimizer(true) }
+  )
   .settings(
     name := "Template-for-Scala-Multiplatform-Projects",
     sonatypeCredentialHost := "s01.oss.sonatype.org",
@@ -39,6 +45,8 @@ lazy val root = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     sonatypeProfileName := "it.nicolasfarabegoli",
     scalacOptions ++= Seq(
       "-Werror",
+      "-feature",
+      "-language:implicitConversions",
       "-rewrite",
       "-indent",
       "-unchecked",
@@ -47,7 +55,8 @@ lazy val root = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies ++= Seq()
   )
 
-lazy val check = taskKey[Unit]("Runs all verification tasks like tests, linters, etc.")
+lazy val check =
+  taskKey[Unit]("Runs all verification tasks like tests, linters, etc.")
 check := {
   (root.jvm / Test / test).value
   (root.jvm / Compile / scalafmtCheck).value
