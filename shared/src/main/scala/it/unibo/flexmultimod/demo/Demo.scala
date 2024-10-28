@@ -5,26 +5,30 @@ import it.unibo.flexmultimod.language.FlexMultiModLanguage.Language.*
 import it.unibo.flexmultimod.tier.Cardinality.Multiple
 import it.unibo.flexmultimod.tier.Peer
 
-trait Gradient[Node <: Peer]:
+trait WithAi
+trait WithRam[RamGb <: Int]
+trait WithTempSensor
+
+trait Gradient[Node <: Peer & WithAi]:
   def gradientCast[Value](source: Boolean, value: Value): Value on Node
 
 object Gradient:
-  def apply[Node <: Peer](): Gradient[Node] = new Gradient[Node]():
+  def apply[Node <: Peer & WithAi](): Gradient[Node] = new Gradient[Node]():
     def gradientCast[Value](source: Boolean, value: Value): Value on Node = ???
 
-trait GreaterDistance[Node <: Peer]:
+trait GreaterDistance[Node <: Peer & (WithTempSensor | WithRam[1])]:
   def isGreaterThan[Value](value: Value, threshold: Value): Boolean on Node
 
 object GreaterDistance:
-  def apply[Node <: Peer](): GreaterDistance[Node] = new GreaterDistance[Node]():
+  def apply[Node <: Peer & (WithTempSensor | WithRam[1])](): GreaterDistance[Node] = new GreaterDistance[Node]():
     def isGreaterThan[Value](value: Value, threshold: Value): Boolean on Node = ???
 
 trait ApplicationDevice extends Peer
 trait InfrastructuralDevice extends Peer
 
 trait SingleInfrastructural:
-  type Application <: Peer { type Tie <: Multiple[Infrastructural] }
-  type Infrastructural <: Peer { type Tie <: Multiple[Peer] }
+  type Application <: Peer & WithRam[1] { type Tie <: Multiple[Infrastructural] }
+  type Infrastructural <: Peer & WithAi { type Tie <: Multiple[Peer] }
 
 trait MyApplication extends SingleInfrastructural, Language:
   private val gradient = Gradient[Infrastructural]()
