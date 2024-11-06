@@ -3,6 +3,7 @@ package it.unibo.flexmultimod.language.meta
 import it.unibo.flexmultimod.language.FlexMultiModLanguage.{Placed, on}
 import it.unibo.flexmultimod.tier.Peer
 
+import scala.annotation.{MacroAnnotation, experimental}
 import scala.quoted.{Expr, Quotes, Type}
 
 object LanguageMacro:
@@ -23,3 +24,27 @@ object LanguageMacro:
         To retrieve a local value use the `bind` method instead.
       """.strip())
     '{ ??? }
+
+@experimental
+class modularized extends MacroAnnotation:
+  override def transform(using quotes: Quotes)(
+      definition: quotes.reflect.Definition,
+      companion: Option[quotes.reflect.Definition]
+  ): List[quotes.reflect.Definition] =
+    import quotes.reflect._
+    val newBody = definition match
+      case DefDef(name, params, retType, Some(body)) =>
+        body.asExpr match
+          case '{ $b: bodyType } =>
+            def newBody(using q: Quotes) = '{
+              ${ body.asExprOf[bodyType] }
+              println(${ Expr(name) })
+            }.asTerm
+            DefDef.copy(definition)(name, params, retType, Some(newBody(using definition.symbol.asQuotes)))
+          case _ =>
+            report.error("???")
+            definition
+      case _ =>
+        report.error("This annotation can only be applied to method definitions.")
+        definition
+    List(newBody)

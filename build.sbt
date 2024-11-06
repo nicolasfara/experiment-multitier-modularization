@@ -23,16 +23,16 @@ ThisBuild / developers := List(
   )
 )
 
-lazy val root = crossProject(JSPlatform, JVMPlatform)
+lazy val root = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("."))
   .configs()
-//  .nativeSettings(
-//    nativeConfig ~= {
-//      _.withLTO(LTO.default)
-//        .withMode(Mode.releaseSize)
-//        .withGC(GC.immix)
-//    }
-//  )
+  .nativeSettings(
+    nativeConfig ~= {
+      _.withLTO(LTO.default)
+        .withMode(Mode.releaseSize)
+        .withGC(GC.immix)
+    }
+  )
   .jsSettings(
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.0",
     scalaJSUseMainModuleInitializer := true,
@@ -45,16 +45,14 @@ lazy val root = crossProject(JSPlatform, JVMPlatform)
     sonatypeProfileName := "it.nicolasfarabegoli",
     scalacOptions ++= Seq(
       "-Werror",
-      "-feature",
-      "-language:implicitConversions",
       "-rewrite",
       "-indent",
       "-unchecked",
       "-explain",
+      "-experimental",
+      "-Xcheck-macros"
     ),
-    libraryDependencies ++= Seq(
-      "io.github.iltotore" %%% "iron" % "2.6.0"
-    )
+    libraryDependencies ++= Seq(),
   )
 
 lazy val check =
@@ -66,8 +64,8 @@ check := {
   (root.js / Test / test).value
   (root.js / Compile / scalafmtCheck).value
 
-//  (root.native / Test / test).value
-//  (root.native / Compile / scalafmtCheck).value
+  (root.native / Test / test).value
+  (root.native / Compile / scalafmtCheck).value
 }
 
 compile := (Compile / compile dependsOn check).value
