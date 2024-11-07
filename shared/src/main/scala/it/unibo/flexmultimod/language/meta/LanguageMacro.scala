@@ -34,17 +34,8 @@ class modularized extends MacroAnnotation:
     import quotes.reflect._
     val newBody = definition match
       case DefDef(name, params, retType, Some(body)) =>
-        body.asExpr match
-          case '{ $b: bodyType } =>
-            def newBody(using q: Quotes) = '{
-              ${ body.asExprOf[bodyType] }
-              println(${ Expr(name) })
-            }.asTerm
-            DefDef.copy(definition)(name, params, retType, Some(newBody(using definition.symbol.asQuotes)))
-          case _ =>
-            report.error("???")
-            definition
-      case _ =>
-        report.error("This annotation can only be applied to method definitions.")
-        definition
+        val oldBody = body.asExpr
+        val newBody = Expr.block(List(oldBody), '{ println(${ Expr(name) }) })
+        DefDef.copy(definition)(name, params, retType, Some(newBody.asTerm))
+      case _ => report.errorAndAbort("This annotation can only be applied to method definitions.")
     List(newBody)
