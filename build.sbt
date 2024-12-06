@@ -22,10 +22,26 @@ ThisBuild / developers := List(
     url("https://nicolasfarabegoli.it")
   )
 )
+ThisBuild / libraryDependencies ++= Seq(
+  "org.typelevel" %%% "cats-core" % "2.12.0",
+  "org.scalatest" %%% "scalatest" % "3.2.19" % Test,
+)
+ThisBuild / coverageEnabled := true
+ThisBuild / semanticdbEnabled := true
+ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
+ThisBuild / scalacOptions ++= Seq(
+  "-Werror",
+  "-rewrite",
+  "-indent",
+  "-unchecked",
+  "-explain",
+  "-experimental",
+  "-Xcheck-macros"
+)
 
 lazy val root = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
   .in(file("."))
-  .configs()
   .nativeSettings(
     nativeConfig ~= {
       _.withLTO(LTO.default)
@@ -43,15 +59,6 @@ lazy val root = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     sonatypeCredentialHost := "s01.oss.sonatype.org",
     sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
     sonatypeProfileName := "it.nicolasfarabegoli",
-    scalacOptions ++= Seq(
-      "-Werror",
-      "-rewrite",
-      "-indent",
-      "-unchecked",
-      "-explain",
-      "-experimental",
-      "-Xcheck-macros"
-    ),
     libraryDependencies ++= Seq(),
   )
 

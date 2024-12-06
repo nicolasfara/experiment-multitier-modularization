@@ -1,10 +1,10 @@
 package it.unibo.flexmultimod.language.meta
 
-import it.unibo.flexmultimod.language.FlexMultiModLanguage.{Placed, on}
-import it.unibo.flexmultimod.tier.Peer
-
 import scala.annotation.{MacroAnnotation, experimental}
 import scala.quoted.{Expr, Quotes, Type}
+
+import it.unibo.flexmultimod.language.FlexMultiModLanguage.{Placed, on}
+import it.unibo.flexmultimod.tier.Peer
 
 object LanguageMacro:
   inline def remoteRefMacro[Value, LocalNode <: Peer, RemoteNode <: Peer](func: Value on RemoteNode)(using placed: Placed[LocalNode]) =

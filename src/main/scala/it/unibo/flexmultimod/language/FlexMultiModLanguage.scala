@@ -1,16 +1,17 @@
 package it.unibo.flexmultimod.language
 
-import it.unibo.flexmultimod.tier.Peer
-
 import scala.annotation.showAsInfix
+
+import it.unibo.flexmultimod.tier.Peer
 
 object FlexMultiModLanguage:
   trait Placed[+PlacedPeer <: Peer]
 
   @showAsInfix
-  infix final case class on[Value, RemotePeer <: Peer]()
+  infix final case class on[+Value, RemotePeer <: Peer]()
 
   trait Language:
+    inline def programSpec[PlacedOn <: Peer](programScope: (Aggregate, Placed[PlacedOn]) ?=> Unit): Unit
     def program[PlacedOn <: Peer](programScope: Placed[PlacedOn] ?=> Unit): Unit
 
     def remoteRef[Value, LocalPeer <: Peer, RemotePeer <: Peer](remoteValue: Value on RemotePeer): Placed[LocalPeer] ?=> Value
