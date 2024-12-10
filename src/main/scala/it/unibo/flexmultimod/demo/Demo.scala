@@ -6,13 +6,6 @@ import it.unibo.flexmultimod.core.language.{Aggregate, Macroprogram, on}
 import it.unibo.flexmultimod.platform.Platform
 import it.unibo.flexmultimod.core.language.Language.*
 
-//import scala.compiletime.constValue
-//import it.unibo.flexmultimod.language.FlexMultiModLanguage.*
-//import it.unibo.flexmultimod.language.meta.modularized
-//import it.unibo.flexmultimod.platform.{Macroprogram, Platform}
-//import it.unibo.flexmultimod.tier.Cardinality.{Multiple, Single}
-//import it.unibo.flexmultimod.tier.Peer
-
 trait WithAi
 trait WithGps
 
