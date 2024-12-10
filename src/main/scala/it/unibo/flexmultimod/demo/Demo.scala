@@ -2,31 +2,36 @@ package it.unibo.flexmultimod.demo
 
 import scala.compiletime.constValue
 import it.unibo.flexmultimod.language.FlexMultiModLanguage.*
-import it.unibo.flexmultimod.language.FlexMultiModLanguage.Language.*
-import it.unibo.flexmultimod.language.{Aggregate, AggregateComponent, LocalComponent}
+import it.unibo.flexmultimod.language.{Aggregate, Component}
 import it.unibo.flexmultimod.language.meta.modularized
-import it.unibo.flexmultimod.tier.{Multiple, Peer}
+import it.unibo.flexmultimod.platform.{Macroprogram, Platform}
+import it.unibo.flexmultimod.tier.Cardinality.{Multiple, Single}
+import it.unibo.flexmultimod.tier.Peer
 
 trait WithAi
 trait WithGps
 
-object Module1 extends LocalComponent[Int *: EmptyTuple, String]:
-  override type Constraints = Any
-  override def apply[PlacedPeer <: Peer & Constraints](inputs: Int *: EmptyTuple): String on PlacedPeer =
+object Module1 extends Component[Int *: EmptyTuple, String]:
+  override type RequiredCapabilities = Any
+  override def apply[PlacedPeer <: Peer & RequiredCapabilities](inputs: Int *: EmptyTuple): String on PlacedPeer =
     ???
 
-object Module2 extends AggregateComponent[(String, Int), Double]:
-  override type Constraints = Any
-  override def apply[PlacedPeer <: Peer & Constraints](inputs: (String, Int))(using Aggregate): Double on PlacedPeer =
-    ???
+object Module2 extends Component[String *: Int *: EmptyTuple, Double], Aggregate:
+  override type RequiredCapabilities = Any
+  override def apply[PlacedPeer <: Peer & RequiredCapabilities](
+      inputs: String *: Int *: EmptyTuple
+  ): Double on PlacedPeer = ???
 
-trait App extends Language:
-  type Smartphone <: Peer { type Tie <: Multiple[EdgeServer] }
-  type EdgeServer <: Peer { type Tie <: Multiple[Smartphone] }
+object App extends Language:
+  type Smartphone <: Peer { type Tie <: Multiple[EdgeServer] & Single[Cloud] }
+  type EdgeServer <: Peer { type Tie <: Multiple[Smartphone] & Single[Cloud] }
+  type Cloud <: Peer { type Tie <: Multiple[EdgeServer] & Multiple[Smartphone] }
 
-  inline def macroProgram[Placement <: Peer](): Unit = programSpec[Placement]:
-    val result = Module1[Smartphone](0 *: EmptyTuple)
-    Module2[EdgeServer]("hello" *: 1 *: EmptyTuple)
+  def macroProgram[Placement <: Peer](using Platform[Placement]): Macroprogram =
+    program[Placement, Unit]:
+      val result = placed(Module1[Smartphone](0 *: EmptyTuple))
+      placed(Module2[EdgeServer](result *: 1 *: EmptyTuple))
+      ()
 
 //trait MyApplication extends Language, Gradient, GreaterDistance, HeavyComputation:
 //  type Node <: Peer { type Tie <: Multiple[Node] }

@@ -1,6 +1,13 @@
-package it.unibo.flexmultimod.tier
+package it.unibo.flexmultimod.core
 
-trait Peer
+import cats.Show
+
+/**
+ * Represents a peer in the system.
+ */
+sealed trait Peer derives Show
+trait ApplicationPeer extends Peer
+trait InfrastructuralPeer extends Peer
 
 /** Expresses the cardinality of a relationship between two peers.
   */
