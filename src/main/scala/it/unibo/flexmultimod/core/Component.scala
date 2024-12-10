@@ -1,7 +1,6 @@
 package it.unibo.flexmultimod.core
 
-import it.unibo.flexmultimod.language.FlexMultiModLanguage.on
-import it.unibo.flexmultimod.tier.Peer
+import it.unibo.flexmultimod.core.language.on
 
 /** Generic movable computation.
   */

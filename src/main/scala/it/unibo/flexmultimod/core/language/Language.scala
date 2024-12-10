@@ -2,6 +2,8 @@ package it.unibo.flexmultimod.core.language
 
 import it.unibo.flexmultimod.core.Peer
 
+import scala.annotation.showAsInfix
+
 /** [[Value]] available on a [[RemotePeer]].
   */
 @showAsInfix

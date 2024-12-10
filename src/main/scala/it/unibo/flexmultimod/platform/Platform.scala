@@ -1,8 +1,8 @@
 package it.unibo.flexmultimod.platform
 
-import it.unibo.flexmultimod.language.Component
+import it.unibo.flexmultimod.core.Component
 import it.unibo.flexmultimod.platform.BoundaryMessages.{InboundMessages, OutboundMessages}
-import it.unibo.flexmultimod.tier.Peer
+import it.unibo.flexmultimod.core.Peer
 
 trait Macroprogram
 
@@ -21,8 +21,4 @@ trait Network[F[_]]:
   def send(message: OutboundMessages): F[Unit]
   def receive(): F[InboundMessages]
 
-trait Platform[F[_], PlacedPeer <: Peer]:
-  network: Network =>
-  def handleComputation(inputMessages: F[InboundMessages]): F[OutboundMessages]
-
-def run[F[_], PlacedPeer <: Peer](platform: Platform[F, PlacedPeer]): F[Unit] = ???
+trait Platform[Placed <: Peer]

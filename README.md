@@ -27,3 +27,5 @@ object MyProgram extends Aggregate, DistanceTo, Routing:
 @main def run(): Unit =
   Modularized.runOn[MyProgram.Application](MyProgram.programDefinition)
 ```
+
+https://sebokwiki.org/wiki/Functional_Architecture
