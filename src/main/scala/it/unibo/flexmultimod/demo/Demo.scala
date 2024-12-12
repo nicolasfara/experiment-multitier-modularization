@@ -8,30 +8,46 @@ import it.unibo.flexmultimod.core.language.Language.*
 
 trait WithAi
 trait WithGps
+trait WithAccelerometer
+trait WithSmartphone extends WithGps, WithAccelerometer
+trait WithWearable extends WithAccelerometer
 
-
-object Module1 extends Component[Int *: EmptyTuple, String, Unit]:
-  override type RequiredCapabilities = (WithAi | Nothing)
+object WalkDetection extends Component[EmptyTuple, Double, Unit]:
+  override type RequiredCapabilities = (WithGps | WithAccelerometer) & (WithSmartphone | WithWearable)
   override def apply[PlacedPeer <: Peer & RequiredCapabilities](
-     inputs: Int *: EmptyTuple
-   ): (String, Set[Unit]) on PlacedPeer = ???
+      inputs: EmptyTuple
+  ): Double on PlacedPeer = ???
 
-object Module2 extends Component[String *: Int *: EmptyTuple, Double, Double]:
+object HeartBeatSensing extends Component[EmptyTuple, Int, Unit]:
+  override type RequiredCapabilities = WithWearable
+  override def apply[PlacedPeer <: Peer & RequiredCapabilities](
+      inputs: EmptyTuple
+  ): Int on PlacedPeer = ???
+
+object CollectiveEmergency extends Component[Double *: Int *: EmptyTuple, Boolean, Boolean]:
   override type RequiredCapabilities = Any
   override def apply[PlacedPeer <: Peer & RequiredCapabilities](
-      inputs: String *: Int *: EmptyTuple
-  ): (Double, Set[Double]) on PlacedPeer = ???
+      inputs: Double *: Int *: EmptyTuple
+  ): Boolean on PlacedPeer = ???
+
+object ShowAlert extends Component[Boolean *: EmptyTuple, Unit, Boolean]:
+  override type RequiredCapabilities = WithSmartphone
+  override def apply[PlacedPeer <: Peer & RequiredCapabilities](
+      inputs: Boolean *: EmptyTuple
+  ): Unit on PlacedPeer = ???
 
 object MacroApp:
-  type Smartphone <: Peer & WithAi { type Tie <: Multiple[EdgeServer] & Single[Cloud] }
+  type Smartphone <: Peer & WithSmartphone { type Tie <: Multiple[EdgeServer] & Single[Cloud] }
+  type Wearable <: Peer & WithWearable { type Tie <: Single[Smartphone] }
   type EdgeServer <: Peer { type Tie <: Multiple[Smartphone] & Single[Cloud] }
   type Cloud <: Peer { type Tie <: Multiple[EdgeServer] & Multiple[Smartphone] }
 
   def macroProgram[Placement <: Peer](using Platform[Placement]): Macroprogram =
     program[Placement, Unit]:
-      val result = Module1[Smartphone](0 *: EmptyTuple).placed._1
-      Module2[EdgeServer](result *: 1 *: EmptyTuple).placed
-      ()
+      val walking = WalkDetection[Smartphone](EmptyTuple).placed
+      val heartBeat = HeartBeatSensing[Wearable](EmptyTuple).placed
+      val emergency = CollectiveEmergency[EdgeServer](walking *: heartBeat *: EmptyTuple).placed
+      ShowAlert[Smartphone](emergency *: EmptyTuple).placed
 
 //trait MyApplication extends Language, Gradient, GreaterDistance, HeavyComputation:
 //  type Node <: Peer { type Tie <: Multiple[Node] }

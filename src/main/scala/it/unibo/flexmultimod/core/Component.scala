@@ -15,6 +15,4 @@ trait Component[-Inputs <: Tuple, +Output, SharedType]:
     * @return
     *   the output of the module.
     */
-  def apply[PlacedPeer <: Peer & RequiredCapabilities](
-      inputs: Inputs,
-  ): (Output, Set[SharedType]) on PlacedPeer
+  def apply[PlacedPeer <: Peer & RequiredCapabilities](inputs: Inputs): Output on PlacedPeer
