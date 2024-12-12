@@ -9,25 +9,27 @@ import it.unibo.flexmultimod.core.language.Language.*
 trait WithAi
 trait WithGps
 
-object Module1 extends Component[Int *: EmptyTuple, String]:
-  override type RequiredCapabilities = Any
-  override def apply[PlacedPeer <: Peer & RequiredCapabilities](inputs: Int *: EmptyTuple): String on PlacedPeer =
-    ???
 
-object Module2 extends Component[String *: Int *: EmptyTuple, Double], Aggregate:
+object Module1 extends Component[Int *: EmptyTuple, String, Unit]:
+  override type RequiredCapabilities = (WithAi | Nothing)
+  override def apply[PlacedPeer <: Peer & RequiredCapabilities](
+     inputs: Int *: EmptyTuple
+   ): (String, Set[Unit]) on PlacedPeer = ???
+
+object Module2 extends Component[String *: Int *: EmptyTuple, Double, Double]:
   override type RequiredCapabilities = Any
   override def apply[PlacedPeer <: Peer & RequiredCapabilities](
       inputs: String *: Int *: EmptyTuple
-  ): Double on PlacedPeer = ???
+  ): (Double, Set[Double]) on PlacedPeer = ???
 
 object MacroApp:
-  type Smartphone <: Peer { type Tie <: Multiple[EdgeServer] & Single[Cloud] }
+  type Smartphone <: Peer & WithAi { type Tie <: Multiple[EdgeServer] & Single[Cloud] }
   type EdgeServer <: Peer { type Tie <: Multiple[Smartphone] & Single[Cloud] }
   type Cloud <: Peer { type Tie <: Multiple[EdgeServer] & Multiple[Smartphone] }
 
   def macroProgram[Placement <: Peer](using Platform[Placement]): Macroprogram =
     program[Placement, Unit]:
-      val result = Module1[Smartphone](0 *: EmptyTuple).placed
+      val result = Module1[Smartphone](0 *: EmptyTuple).placed._1
       Module2[EdgeServer](result *: 1 *: EmptyTuple).placed
       ()
 

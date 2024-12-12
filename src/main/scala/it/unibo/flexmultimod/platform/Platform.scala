@@ -10,8 +10,8 @@ trait Macroprogram
   *
   * An execution semantic can be round-based of reactive, for example.
   */
-trait ExecutionSemantic[F[_]]:
-  def execute[Input <: Tuple, Output, A, B](program: Component[Input, Output], context: F[A]): F[B]
+//trait ExecutionSemantic[F[_]]:
+//  def execute[Input <: Tuple, Output, A, B](program: Component[Input, Output], context: F[A]): F[B]
 
 enum BoundaryMessages:
   case InboundMessages() extends BoundaryMessages
