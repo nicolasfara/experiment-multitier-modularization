@@ -4,7 +4,7 @@ import it.unibo.flexmultimod.core.language.on
 
 /** Generic movable computation.
   */
-trait Component[-Inputs <: Tuple, +Output, SharedType]:
+trait Component[-Inputs <: Tuple, +Output]:
   /** The constraints required by the [[Component]] to be executed.
     */
   type RequiredCapabilities

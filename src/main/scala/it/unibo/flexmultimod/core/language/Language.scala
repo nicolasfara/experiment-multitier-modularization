@@ -23,3 +23,9 @@ object Language:
     /** Given a [[value]] on a [[RemotePeer]], returns the [[value]] on the [[LocalPeer]] context.
       */
     def placed: Placed[LocalPeer] ?=> Value = ???
+
+  extension [Value, RemotePeer <: Peer, LocalPeer <: Peer](value: Aggregate[Value] on RemotePeer)
+    /** Given a [[value]] on a [[RemotePeer]], returns the [[value]] on the [[LocalPeer]] context coming from an
+      * aggregation operation.
+      */
+    def asLocallyPlaced: Placed[LocalPeer] ?=> Value = ???

@@ -12,41 +12,40 @@ trait WithAccelerometer
 trait WithSmartphone extends WithGps, WithAccelerometer
 trait WithWearable extends WithAccelerometer
 
-object WalkDetection extends Component[EmptyTuple, Double, Unit]:
+object WalkDetection extends Component[EmptyTuple, Double]:
   override type RequiredCapabilities = (WithGps | WithAccelerometer) & (WithSmartphone | WithWearable)
   override def apply[PlacedPeer <: Peer & RequiredCapabilities](
       inputs: EmptyTuple
   ): Double on PlacedPeer = ???
 
-object HeartBeatSensing extends Component[EmptyTuple, Int, Unit]:
+object HeartBeatSensing extends Component[EmptyTuple, Int]:
   override type RequiredCapabilities = WithWearable
   override def apply[PlacedPeer <: Peer & RequiredCapabilities](
       inputs: EmptyTuple
   ): Int on PlacedPeer = ???
 
-object CollectiveEmergency extends Component[Double *: Int *: EmptyTuple, Boolean, Boolean]:
+object CollectiveEmergency extends Component[Double *: Int *: EmptyTuple, Aggregate[Boolean]]:
   override type RequiredCapabilities = Any
   override def apply[PlacedPeer <: Peer & RequiredCapabilities](
       inputs: Double *: Int *: EmptyTuple
-  ): Boolean on PlacedPeer = ???
+  ): Aggregate[Boolean] on PlacedPeer = ???
 
-object ShowAlert extends Component[Boolean *: EmptyTuple, Unit, Boolean]:
+object ShowAlert extends Component[Boolean *: EmptyTuple, Unit]:
   override type RequiredCapabilities = WithSmartphone
   override def apply[PlacedPeer <: Peer & RequiredCapabilities](
       inputs: Boolean *: EmptyTuple
   ): Unit on PlacedPeer = ???
 
 object MacroApp:
-  type Smartphone <: Peer & WithSmartphone { type Tie <: Multiple[EdgeServer] & Single[Cloud] }
+  type Smartphone <: Peer & WithSmartphone { type Tie <: Multiple[Cloud] & Single[Cloud] }
   type Wearable <: Peer & WithWearable { type Tie <: Single[Smartphone] }
-  type EdgeServer <: Peer { type Tie <: Multiple[Smartphone] & Single[Cloud] }
-  type Cloud <: Peer { type Tie <: Multiple[EdgeServer] & Multiple[Smartphone] }
+  type Cloud <: Peer & WithAi { type Tie <: Multiple[Cloud] & Multiple[Smartphone] }
 
   def macroProgram[Placement <: Peer](using Platform[Placement]): Macroprogram =
     program[Placement, Unit]:
       val walking = WalkDetection[Smartphone](EmptyTuple).placed
       val heartBeat = HeartBeatSensing[Wearable](EmptyTuple).placed
-      val emergency = CollectiveEmergency[EdgeServer](walking *: heartBeat *: EmptyTuple).placed
+      val emergency = CollectiveEmergency[Cloud](walking *: heartBeat *: EmptyTuple).asLocallyPlaced
       ShowAlert[Smartphone](emergency *: EmptyTuple).placed
 
 //trait MyApplication extends Language, Gradient, GreaterDistance, HeavyComputation:
