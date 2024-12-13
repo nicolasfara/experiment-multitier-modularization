@@ -1,6 +1,6 @@
 package it.unibo.flexmultimod.core
 
-import it.unibo.flexmultimod.core.language.on
+import it.unibo.flexmultimod.core.language.Language.on
 
 /** Generic movable computation.
   */
