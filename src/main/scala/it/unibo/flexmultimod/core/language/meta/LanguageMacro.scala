@@ -17,11 +17,11 @@ object LanguageMacro:
 
   private def noCodeBetweenComponentsOrRaise(using quotes: Quotes)(programBody: quotes.reflect.Block): Unit =
     import quotes.reflect.*
-    val Block(statements, returnTerm) = programBody
+    val Block(statements, _) = programBody
     statements
       .map(stmt => stmt -> containsComponent(using quotes)(stmt))
-      .filter: (_, isComponent) =>
-        !isComponent
+      .filterNot: (_, isComponent) =>
+        isComponent
       .foreach: (stmt, _) =>
         report.errorAndAbort(s"Code between components is not allowed: ${stmt.show}", stmt.pos)
 
@@ -40,13 +40,13 @@ object LanguageMacro:
     @targetName("isComponentTypeTree")
     def isComponent: Boolean =
       import quotes.reflect.*
-      tt.tpe <:< TypeRepr.of[Component[?, ?]]
+      tt.tpe <:< TypeRepr.of[Component[?, ?, ?]]
 
   extension (using quotes: Quotes)(tt: quotes.reflect.Term)
     @targetName("isComponentTerm")
     def isComponent: Boolean =
       import quotes.reflect.*
-      tt.tpe <:< TypeRepr.of[Component[?, ?]]
+      tt.tpe <:< TypeRepr.of[Component[?, ?, ?]]
 
   private def extractProgramBody(using quotes: Quotes)(programBody: quotes.reflect.Statement): quotes.reflect.Block =
     import quotes.reflect.*

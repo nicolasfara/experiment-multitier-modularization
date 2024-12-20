@@ -9,11 +9,11 @@ object Language:
   /** Represents the scope of a computation that occurs in the [[PlacedPeer]] context.
     */
   trait Placed[+PlacedPeer <: Peer]
-  
-  private final case class onValue[+Value](value: Value)
-  
-  @showAsInfix
-  opaque infix type on[+Value, RemotePeer <: Peer] = onValue[Value]
+
+//  private final case class onValue[+Value](value: Value)
+//
+//  @showAsInfix
+//  infix opaque type on[+Value, RemotePeer <: Peer] = onValue[Value]
 
   /** Function used to define the macroprogram that will be executed on the [[PlacedOn]] context. Returns the
     * [[Macroprogram]] application that will be used.
@@ -22,13 +22,13 @@ object Language:
     // given p: Placed[PlacedOn] = new Placed[PlacedOn] {}
     ${ programMacroImpl('scope) }
 
-  extension [Value, RemotePeer <: Peer, LocalPeer <: Peer](value: Value on RemotePeer)
-    /** Given a [[value]] on a [[RemotePeer]], returns the [[value]] on the [[LocalPeer]] context.
-      */
-    def placed: Placed[LocalPeer] ?=> Value = ???
+//  extension [Value, RemotePeer <: Peer, LocalPeer <: Peer](value: Value)
+//    /** Given a [[value]] on a [[RemotePeer]], returns the [[value]] on the [[LocalPeer]] context.
+//      */
+//    def placed: Placed[LocalPeer] ?=> Value = ???
 
-  extension [Value, RemotePeer <: Peer, LocalPeer <: Peer](value: Aggregate[Value] on RemotePeer)
+  extension [Value, LocalPeer <: Peer](value: Aggregate[Value])
     /** Given a [[value]] on a [[RemotePeer]], returns the [[value]] on the [[LocalPeer]] context coming from an
       * aggregation operation.
       */
-    def asLocallyPlaced: Placed[LocalPeer] ?=> Value = ???
+    def localValue: Placed[LocalPeer] ?=> Value = ???

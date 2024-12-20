@@ -12,41 +12,27 @@ trait WithAccelerometer
 trait WithSmartphone extends WithGps, WithAccelerometer
 trait WithWearable extends WithAccelerometer
 
-object WalkDetection extends Component[EmptyTuple, Double]:
-  override type RequiredCapabilities = (WithGps | WithAccelerometer) & (WithSmartphone | WithWearable)
-  override def apply[PlacedPeer <: Peer & RequiredCapabilities](
-      inputs: EmptyTuple
-  ): Double on PlacedPeer = ???
+object WalkDetection extends Component[EmptyTuple, Double, WithGps | WithAccelerometer]:
+  override def apply[PlacedPeer <: WithRequiredCapabilities](inputs: EmptyTuple): Double = ???
 
-object HeartbeatSensing extends Component[EmptyTuple, Int]:
-  override type RequiredCapabilities = WithWearable
-  override def apply[PlacedPeer <: Peer & RequiredCapabilities](
-      inputs: EmptyTuple
-  ): Int on PlacedPeer = ???
+object HeartbeatSensing extends Component[EmptyTuple, Int, WithWearable]:
+  override def apply[PlacedPeer <: WithRequiredCapabilities](inputs: EmptyTuple): Int = ???
 
-object CollectiveEmergency extends Component[Double *: Int *: EmptyTuple, Aggregate[Boolean]]:
-  override type RequiredCapabilities = Any
-  override def apply[PlacedPeer <: Peer & RequiredCapabilities](
-      inputs: Double *: Int *: EmptyTuple
-  ): Aggregate[Boolean] on PlacedPeer = ???
+object CollectiveEmergency extends Component[Double *: Int *: EmptyTuple, Aggregate[Boolean], Any]:
+  override def apply[PlacedPeer <: WithRequiredCapabilities](inputs: Double *: Int *: EmptyTuple): Aggregate[Boolean] =
+    ???
 
-object ShowAlert extends Component[Boolean *: EmptyTuple, Unit]:
-  override type RequiredCapabilities = WithSmartphone
-  override def apply[PlacedPeer <: Peer & RequiredCapabilities](
-      inputs: Boolean *: EmptyTuple
-  ): Unit on PlacedPeer = ???
+object ShowAlert extends Component[Boolean *: EmptyTuple, Unit, WithSmartphone]:
+  override def apply[PlacedPeer <: WithRequiredCapabilities](inputs: Boolean *: EmptyTuple): Unit = ???
 
 object MacroApp:
-  type Smartphone <: ApplicationPeer & WithSmartphone:
-    type Tie <: Multiple[Cloud] & Single[Cloud]
-  type Wearable <: InfrastructuralPeer & WithWearable:
-    type Tie <: Single[Smartphone]
-  type Cloud <: InfrastructuralPeer & WithAi:
-    type Tie <: Multiple[Cloud] & Multiple[Smartphone]
+  type Smartphone <: ApplicationPeer & WithSmartphone { type Tie <: Single[Cloud] & Single[Wearable] }
+  type Wearable <: InfrastructuralPeer & WithWearable { type Tie <: Single[Smartphone] }
+  type Cloud <: InfrastructuralPeer & WithAi { type Tie <: Multiple[Cloud] & Multiple[Smartphone] }
 
   def macroProgram[Placement <: Peer](using Platform[Placement]): Macroprogram =
     program[Placement, Unit]:
-      val walking = WalkDetection[Smartphone](EmptyTuple).placed
-      val heartBeat = HeartbeatSensing[Wearable](EmptyTuple).placed
-      val emergency = CollectiveEmergency[Cloud](walking *: heartBeat *: EmptyTuple).asLocallyPlaced
-      ShowAlert[Smartphone](emergency *: EmptyTuple).placed
+      val walking = WalkDetection[Smartphone](EmptyTuple)
+      val heartBeat = HeartbeatSensing[Wearable](EmptyTuple)
+      val emergency = CollectiveEmergency[Cloud](walking *: heartBeat *: EmptyTuple).localValue
+      ShowAlert[Smartphone](emergency *: EmptyTuple)
