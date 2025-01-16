@@ -40,24 +40,18 @@ object LanguageMacro:
     @targetName("isComponentTypeTree")
     def isComponent: Boolean =
       import quotes.reflect.*
-      tt.tpe <:< TypeRepr.of[Component[?, ?, ?]]
+      tt.tpe <:< TypeRepr.of[Component[?, ?]]
 
   extension (using quotes: Quotes)(tt: quotes.reflect.Term)
     @targetName("isComponentTerm")
     def isComponent: Boolean =
       import quotes.reflect.*
-      tt.tpe <:< TypeRepr.of[Component[?, ?, ?]]
+      tt.tpe <:< TypeRepr.of[Component[?, ?]]
 
   private def extractProgramBody(using quotes: Quotes)(programBody: quotes.reflect.Statement): quotes.reflect.Block =
     import quotes.reflect.*
     programBody match
-      case Inlined(_, _, bodyBlock) =>
-        bodyBlock match
-          case Block(applyBody :: Nil, _) =>
-            applyBody match
-              case DefDef(_, _, _, Some(body)) =>
-                body match
-                  case Inlined(_, _, blockBody: Block) => blockBody
+      case Inlined(_, _, Block(DefDef(_, _, _, Some(Inlined(_, _, blockBody: Block))) :: Nil, _)) => blockBody
       case _ => report.errorAndAbort("The program must be defined inside a block.")
 
 //  inline def remoteRefMacro[Value, LocalNode <: Peer, RemoteNode <: Peer](func: Value on RemoteNode)(using

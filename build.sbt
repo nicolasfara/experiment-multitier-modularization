@@ -62,18 +62,3 @@ lazy val root = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     sonatypeProfileName := "it.nicolasfarabegoli",
     libraryDependencies ++= Seq(),
   )
-
-lazy val check =
-  taskKey[Unit]("Runs all verification tasks like tests, linters, etc.")
-check := {
-  (root.jvm / Test / test).value
-  (root.jvm / Compile / scalafmtCheck).value
-
-  (root.js / Test / test).value
-  (root.js / Compile / scalafmtCheck).value
-
-  (root.native / Test / test).value
-  (root.native / Compile / scalafmtCheck).value
-}
-
-compile := (Compile / compile dependsOn check).value

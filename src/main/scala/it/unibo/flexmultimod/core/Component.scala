@@ -4,10 +4,10 @@ import it.unibo.flexmultimod.core.Peer
 
 /** Generic movable computation.
   */
-trait Component[-Inputs <: Tuple, +Output, RequiredCapabilities]:
+trait Component[-Inputs <: Tuple, +Output]:
   /** The constraints required by the [[Component]] to be executed.
     */
-  final type WithRequiredCapabilities = Peer & RequiredCapabilities
+  type RequiredCapabilities
 
   /** Processes the [[Inputs]] and return the [[Output]].
     * @param inputs
@@ -15,4 +15,4 @@ trait Component[-Inputs <: Tuple, +Output, RequiredCapabilities]:
     * @return
     *   the output of the module.
     */
-  def apply[PlacedPeer <: WithRequiredCapabilities](inputs: Inputs): Output
+  def apply[PlacedPeer <: Peer & RequiredCapabilities](inputs: Inputs): Output
