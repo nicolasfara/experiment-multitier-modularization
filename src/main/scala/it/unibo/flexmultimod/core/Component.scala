@@ -1,10 +1,8 @@
 package it.unibo.flexmultimod.core
 
-import it.unibo.flexmultimod.core.Peer
-
 /** Generic movable computation.
   */
-trait Component[-Inputs <: Tuple, +Output]:
+trait Component[-Inputs <: Product, +Output]:
   /** The constraints required by the [[Component]] to be executed.
     */
   type RequiredCapabilities

@@ -21,17 +21,31 @@ object HeartbeatSensing extends Component[EmptyTuple, Int]:
 
 /* Collective component requiring the interaction with neighbor devices executing the same component instance.
  * Note the Aggregate[Boolean] return type, which represents the collective nature of the component.
+ * This kind of components have an implicit "collective" input coming from the same component instance on neighbor devices.
  */
-object CollectiveEmergency extends Component[Double *: Int *: EmptyTuple, Aggregate[Boolean]]:
+final case class EmergencyInput(walking: Double, heartbeat: Int)
+object CollectiveEmergency extends Component[EmergencyInput, Aggregate[Boolean]]:
   override type RequiredCapabilities = Any
-  override def apply[PlacedPeer <: Peer & RequiredCapabilities](
-      inputs: Double *: Int *: EmptyTuple
-  ): Aggregate[Boolean] = ???
+  override def apply[PlacedPeer <: Peer & RequiredCapabilities](inputs: EmergencyInput): Aggregate[Boolean] = ???
 
-object ShowAlert extends Component[Boolean *: EmptyTuple, Unit]:
+final case class AlertInput(isEmergency: Boolean)
+object ShowAlert extends Component[AlertInput, Unit]:
   override type RequiredCapabilities = WithNotification
-  override def apply[PlacedPeer <: Peer & RequiredCapabilities](inputs: Boolean *: EmptyTuple): Unit = ???
+  override def apply[PlacedPeer <: Peer & RequiredCapabilities](inputs: AlertInput): Unit = ???
 
+/*
+ * 1. Specify differently the logical network (?) -- another type-based specification?
+ * 2. Intercept invalid components "wiring" at compile time? Offloading to a device not directly connected to the current device.
+ * 3. The "Tie" definition defines a one-way connection between two peers types.
+ *    A corresponding "Tie" definition is needed for the other direction.
+ *    - A Tie B means that A can send messages to B, but B cannot send messages to A.
+ *    - [A Tie B] & [B Tie A] means a bidirectional connection.
+ * 4. Code between components: where it will be executed? (Single code specification | macroprogram specification)
+ *    - On the ApplicationPeer would be the best choice.
+ *    - On all the devices? Possible useless...
+ * 4. Scafi3 Integration?
+ * 5. What about reconfiguration?
+ */
 object MacroApp:
   type Smartphone <: ApplicationPeer & WithGps & WithAccelerometer & WithNotification:
     type Tie <: Single[Cloud] & Single[Wearable]
@@ -40,9 +54,9 @@ object MacroApp:
   type Cloud <: InfrastructuralPeer & WithAi:
     type Tie <: Multiple[Cloud] & Multiple[Smartphone]
 
-  def macroProgram[Placement <: Peer](using Platform[Placement]): Macroprogram =
+  def macroProgram[Placement <: Peer]: Macroprogram =
     program[Placement, Unit]:
       val walking = WalkDetection[Smartphone](EmptyTuple)
       val heartBeat = HeartbeatSensing[Wearable](EmptyTuple)
-      val emergency = CollectiveEmergency[Cloud](walking *: heartBeat *: EmptyTuple).localValue
-      ShowAlert[Smartphone](emergency *: EmptyTuple)
+      val emergency = CollectiveEmergency[Cloud](EmergencyInput(walking, heartBeat)).localValue
+      ShowAlert[Smartphone](AlertInput(emergency))
