@@ -21,7 +21,7 @@ import scala.annotation.showAsInfix
   */
 object DeploymentDsl:
   @showAsInfix
-  infix final case class On[Capabilities, C <: Component[?, ?, Capabilities], D <: Device[?, Capabilities]](
+  infix final case class On[+Capabilities, +C <: Component[?, ?, Capabilities], +D <: Device[?, Capabilities]](
       component: C,
       device: D,
   )
@@ -33,10 +33,7 @@ object DeploymentDsl:
 
   def deployment(init: Deployment ?=> Unit): DeploymentSpec = ???
 
-  infix def deploy[ID: Ordering](
-      device: Application[ID, ?],
-      allocations: List[On[?, ?, ?]]
-  )(using d: Deployment) = ???
+  infix def deploy[ID: Ordering](device: Application[ID, ?], allocations: List[On[?, ?, ?]])(using d: Deployment) = ???
 
   def foo = deployment:
     val a = MovementDetection on Smartphone1()

@@ -47,12 +47,15 @@ object ShowAlert extends Component[AlertInput, Unit]:
  * 5. What about reconfiguration?
  */
 object MacroApp:
+  //
   type Smartphone <: ApplicationPeer & WithGps & WithAccelerometer & WithNotification:
     type Tie <: Single[Cloud] & Single[Wearable]
   type Wearable <: InfrastructuralPeer & WithAccelerometer:
     type Tie <: Single[Smartphone]
   type Cloud <: InfrastructuralPeer & WithAi:
-    type Tie <: Multiple[Cloud] & Multiple[Smartphone]
+    type Tie <: Multiple[Smartphone]
+
+  // Instaziazione della specifica sopra definita
 
   def macroProgram[Placement <: Peer]: Macroprogram =
     program[Placement, Unit]:
@@ -60,3 +63,8 @@ object MacroApp:
       val heartBeat = HeartbeatSensing[Wearable](EmptyTuple)
       val emergency = CollectiveEmergency[Cloud](EmergencyInput(walking, heartBeat)).localValue
       ShowAlert[Smartphone](AlertInput(emergency))
+
+//  Provare:
+//      - Specifica typing infrastruttura
+//      - Specifica del DAG
+//      - Specifica deployment che matchi capabilities/dag/infrastruttura
