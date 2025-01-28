@@ -6,9 +6,8 @@ trait Foo
 trait Bar
 trait Baz
 
-
 object MovementDetection extends Component[EmptyTuple, Double]:
-  override type Capabilities >: Foo | Baz | Int | "Porca Madonna" | 1 | 4211412
+  override type Capabilities >: Foo | Baz
   override def apply(input: EmptyTuple): Double = ???
 
 trait DistanceBetween extends Component[EmptyTuple, Double]:

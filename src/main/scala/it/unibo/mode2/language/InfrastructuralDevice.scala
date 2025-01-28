@@ -8,19 +8,28 @@ trait Application[ID] extends Device[ID]
 trait Infrastructural[ID] extends Device[ID]
 
 trait Smartphone[ID] extends Application[ID]:
-  override type Capabilities = Foo & Bar
+  override type Capabilities = Bar
 trait Wearable[ID] extends Infrastructural[ID]:
-  override type Capabilities = Any
+  override type Capabilities = Foo
 
-object Smartphone1 extends Smartphone[1]
+object ApplicationSmartphone extends Smartphone[1]
 object Smartphone2 extends Smartphone[2]
-object Wearable1 extends Wearable[1]
+object InfrastructuralWearable extends Wearable[1]
 
-class Deployment[D <: Device[?], C <: Component[?, ?]](val device: D, val component: C)(using
-    ev: device.Capabilities <:< component.Capabilities
+class Placement[C <: Component[?, ?], D <: Device[?]](val component: C, val device: D)(using
+    device.Capabilities <:< component.Capabilities
 )
 
-trait A
-trait B
-trait C extends A with B
-val a = Deployment(Smartphone1, MovementDetection)
+class Pippo[A <: Application[?], C <: Component[?, ?], D <: Device[?]](
+    val applicationDevice: A,
+    val placement: Placement[C, D]
+)
+
+extension [C <: Component[?, ?], D <: Device[?]](component: C)
+  infix def deployedOn(device: D)(using device.Capabilities <:< component.Capabilities): Placement[C, D] =
+    Placement(component, device)
+
+extension [A <: Application[?], C <: Component[?, ?], D <: Device[?]](placement: Placement[C, D])
+  infix def forDevice(device: A): Pippo[A, C, D] = Pippo(device, placement)
+
+val deployment = MovementDetection deployedOn InfrastructuralWearable forDevice ApplicationSmartphone

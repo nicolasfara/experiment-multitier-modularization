@@ -1,7 +1,6 @@
 package it.unibo.mode2.language
 
 import it.unibo.mode2.MovementDetection
-import it.unibo.mode2.language.DeploymentDsl.on
 
 import scala.annotation.showAsInfix
 
