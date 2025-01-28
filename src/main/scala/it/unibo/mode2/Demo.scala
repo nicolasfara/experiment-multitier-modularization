@@ -18,19 +18,30 @@ object EmergencyDetection extends Component[Double *: Double *: EmptyTuple, Bool
   override type Capabilities >: WithAlert
   override def apply(input: Double *: Double *: EmptyTuple): Boolean = ???
 
-trait Smartphone[ID] extends Application[ID]:
+trait Smartphone extends Application:
   override type Capabilities = WithAccelerometer & WithGps & WithAlert
-trait Wearable[ID] extends Infrastructural[ID]:
+
+trait Wearable extends Infrastructural:
   override type Capabilities = WithAccelerometer
 
-object ApplicationSmartphone extends Smartphone[1]
-object InfrastructuralWearable extends Wearable[1]
+object ApplicationSmartphone extends Smartphone:
+  override type Tie >: this.type & InfrastructuralWearable.type
+object InfrastructuralWearable extends Wearable:
+  override type Tie >: ApplicationSmartphone.type
+
+//trait A
+//trait B
+//trait C
+// val a = summon[(ApplicationSmartphone.type & InfrastructuralWearable.type) <:< InfrastructuralWearable.type]
+
+import it.unibo.mode2.language.InfrastructuralDsl.*
 
 def infrastructureSpecification(): Unit =
-  import it.unibo.mode2.language.InfrastructuralDsl.*
-  MovementDetection deployedOn InfrastructuralWearable forDevice ApplicationSmartphone
-  DistanceBetween deployedOn ApplicationSmartphone forDevice ApplicationSmartphone
-  EmergencyDetection deployedOn ApplicationSmartphone forDevice ApplicationSmartphone
+  deployment:
+    forDevice(ApplicationSmartphone):
+      MovementDetection deployedOn InfrastructuralWearable
+      DistanceBetween deployedOn ApplicationSmartphone
+      EmergencyDetection deployedOn ApplicationSmartphone
 
 def macroProgram(): Unit =
   val movementSpeed = MovementDetection(EmptyTuple)
