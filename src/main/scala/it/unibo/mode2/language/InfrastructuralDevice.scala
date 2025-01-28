@@ -1,12 +1,26 @@
 package it.unibo.mode2.language
 
-sealed trait Device[ID: Ordering, Capabilities]
-trait Application[ID, Capabilities] extends Device[ID, Capabilities]
-trait Infrastructural[ID, Capabilities] extends Device[ID, Capabilities]
+import it.unibo.mode2.{Bar, Foo, MovementDetection}
 
-trait Smartphone[ID] extends Application[ID, Any]
-trait Wearable[ID] extends Infrastructural[ID, Any]
+sealed trait Device[ID: Ordering]:
+  type Capabilities
+trait Application[ID] extends Device[ID]
+trait Infrastructural[ID] extends Device[ID]
 
-class Smartphone1 extends Smartphone[1]
+trait Smartphone[ID] extends Application[ID]:
+  override type Capabilities = Foo & Bar
+trait Wearable[ID] extends Infrastructural[ID]:
+  override type Capabilities = Any
+
+object Smartphone1 extends Smartphone[1]
 object Smartphone2 extends Smartphone[2]
 object Wearable1 extends Wearable[1]
+
+class Deployment[D <: Device[?], C <: Component[?, ?]](val device: D, val component: C)(using
+    ev: device.Capabilities <:< component.Capabilities
+)
+
+trait A
+trait B
+trait C extends A with B
+val a = Deployment(Smartphone1, MovementDetection)

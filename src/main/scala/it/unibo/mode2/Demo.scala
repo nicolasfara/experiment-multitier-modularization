@@ -2,8 +2,14 @@ package it.unibo.mode2
 
 import it.unibo.mode2.language.Component
 
-object MovementDetection extends Component[EmptyTuple, Double, Int]:
+trait Foo
+trait Bar
+trait Baz
+
+
+object MovementDetection extends Component[EmptyTuple, Double]:
+  override type Capabilities >: Foo | Baz | Int | "Porca Madonna" | 1 | 4211412
   override def apply(input: EmptyTuple): Double = ???
 
-object DistanceBetween extends Component[EmptyTuple, Double, Nothing]:
+trait DistanceBetween extends Component[EmptyTuple, Double]:
   override def apply(input: EmptyTuple): Double = ???
