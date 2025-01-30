@@ -20,13 +20,9 @@ object InfrastructuralDsl:
   def deployment(init: MacroDeploymentScope ?=> Unit): Unit = ???
 
   class DeviceDeploymentScope
-  def forDevice[A <: Application](device: A)(init: (DeviceDeploymentScope, A) ?=> Unit)(using MacroDeploymentScope): Unit =
-    given d: A = device
+  def forDevice[A <: Application](device: A)(init: DeviceDeploymentScope ?=> Unit)(using MacroDeploymentScope): Unit =
     given t: DeviceDeploymentScope = new DeviceDeploymentScope
 
   extension [C <: Component[?, ?], D <: Device, A <: Application](component: C)
-    infix def deployedOn(device: D)(using dc: A)(using device.Capabilities <:< component.Capabilities): Placement[C, D] =
+    infix def deployedOn(device: D)(using device.Capabilities <:< component.Capabilities): Placement[C, D] =
       Placement(component, device)
-//
-//  extension [A <: Application[?], C <: Component[?, ?], D <: Device[?]](placement: Placement[C, D])
-//    infix def forDevice(device: A): Deployment[A, C, D] = Deployment(device, placement)
