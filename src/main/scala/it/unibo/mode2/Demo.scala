@@ -2,6 +2,8 @@ package it.unibo.mode2
 
 import it.unibo.mode2.language.{Application, Component, Infrastructural}
 
+trait Aggregate[R]
+
 trait WithAccelerometer
 trait WithGps
 trait WithAlert
@@ -14,9 +16,9 @@ object DistanceBetween extends Component[EmptyTuple, Double]:
   override type Capabilities = WithGps
   override def apply(input: EmptyTuple): Double = ???
 
-object EmergencyDetection extends Component[Double *: Double *: EmptyTuple, Boolean]:
+object EmergencyDetection extends Component[Double *: Double *: EmptyTuple, Aggregate[Boolean]]:
   override type Capabilities = WithAlert
-  override def apply(input: Double *: Double *: EmptyTuple): Boolean = ???
+  override def apply(input: Double *: Double *: EmptyTuple): Aggregate[Boolean] = ???
 
 trait Smartphone extends Application:
   override type Capabilities = WithAccelerometer & WithGps & WithAlert
