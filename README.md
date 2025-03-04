@@ -29,3 +29,10 @@ object MyProgram extends Aggregate, DistanceTo, Routing:
 ```
 
 https://sebokwiki.org/wiki/Functional_Architecture
+
+
+- Data specifica dichairativa "compilarla" e verificarla contro un deployment (REPL)
+  - Prevedere architettura per questo sistema
+- Language per i constraints
+- Typing Aggregate e Scafi (tipo component collettivo)
+- Implementazione di un programma collettivo semplice senza ScaFi

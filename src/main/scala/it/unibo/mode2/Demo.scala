@@ -22,7 +22,7 @@ object EmergencyDetection extends Component[Double *: Double *: EmptyTuple, Aggr
 
 trait Smartphone extends Application:
   override type Capabilities = WithAccelerometer & WithGps & WithAlert
-  override type Tie <: Smartphone & Wearable
+  override type Tie <: Smartphone & Wearable & Edge
 
 trait Wearable extends Infrastructural:
   override type Capabilities = WithAccelerometer
@@ -56,6 +56,6 @@ def infrastructureSpecification(): Any =
 def macroProgram(): Any =
   val movementSpeed = MovementDetection(EmptyTuple)
   val distance = DistanceBetween(EmptyTuple)
-  EmergencyDetection(movementSpeed *: distance *: EmptyTuple)
+  EmergencyDetection(movementSpeed *: distance *: EmptyTuple).asLocal
 
 // macroProgram executedOn infrastructureSpecification
