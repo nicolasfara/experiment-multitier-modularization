@@ -1,6 +1,6 @@
 package it.unibo.mode2.language
 
-import it.unibo.mode2.MovementDetection
+import it.unibo.mode2.PositionSensor
 
 import scala.annotation.showAsInfix
 
@@ -19,6 +19,7 @@ import scala.annotation.showAsInfix
   * }}}
   */
 object DeploymentDsl
+  
 
 
 //  @showAsInfix
