@@ -1,8 +1,6 @@
 package it.unibo.mode2
 
-import it.unibo.mode2.language.{Application, CollectiveComponent, Component, Infrastructural, LocalComponent, SharedData}
-
-trait Aggregate[R] extends SharedData[R]
+import it.unibo.mode2.language.{Application, CollectiveComponent, Infrastructural, LocalComponent, SharedData}
 
 trait WithAccelerometer
 trait WithGps
@@ -16,13 +14,15 @@ object HeartbeatSensor extends LocalComponent[EmptyTuple, Int]:
   override type Capabilities = WithAccelerometer
   override def apply(input: EmptyTuple): Int = ???
 
-object RegionsHeartbeatDetection extends CollectiveComponent[(Double, Double) *: Int *: EmptyTuple, Aggregate[Boolean]]:
+object RegionsHeartbeatDetection extends CollectiveComponent[(Double, Double) *: Int *: EmptyTuple, Boolean]:
   override type Capabilities = WithAlert
-  override def apply(input: (Double, Double) *: Int *: EmptyTuple): Aggregate[Boolean] = ???
+  override def apply(input: (Double, Double) *: Int *: EmptyTuple): SharedData ?=> Boolean = ???
 
 object AlertActuation extends LocalComponent[Boolean *: EmptyTuple, Unit]:
   override type Capabilities = WithGps
   override def apply(input: Boolean *: EmptyTuple): Unit = ???
+
+// Infrastructure Definitions --------------------------------------------
 
 trait Smartphone extends Application:
   override type Capabilities = WithAccelerometer & WithGps & WithAlert
@@ -58,10 +58,10 @@ def infrastructureSpecification(): Any =
       AlertActuation deployedOn Smartphone2
       RegionsHeartbeatDetection deployedOn Smartphone2
 
-def macroProgram(): Any =
+def macroProgram(using SharedData): Any =
   val position = PositionSensor(EmptyTuple)
   val heartbeat = HeartbeatSensor(EmptyTuple)
-  val alert = RegionsHeartbeatDetection(position *: heartbeat *: EmptyTuple).local
+  val alert = RegionsHeartbeatDetection(position *: heartbeat *: EmptyTuple)
   AlertActuation(alert *: EmptyTuple)
 
 // macroProgram executedOn infrastructureSpecification
