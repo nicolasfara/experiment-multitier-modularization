@@ -1,8 +1,8 @@
 package it.unibo.mode2.language
 
-import it.unibo.mode2.PositionSensor
-
 import scala.annotation.showAsInfix
+
+import it.unibo.mode2.PositionSensor
 
 /** Tentative DSL for binding components:
   * {{{
@@ -19,8 +19,6 @@ import scala.annotation.showAsInfix
   * }}}
   */
 object DeploymentDsl
-  
-
 
 //  @showAsInfix
 //  infix final case class On[Capabilities, C <: Component[?, ?, Capabilities], D <: Device[?, Capabilities]](

@@ -2,6 +2,7 @@ package it.unibo.flexmultimod.core.language.meta
 
 import scala.annotation.{MacroAnnotation, experimental, targetName}
 import scala.quoted.{Expr, Quotes, Type}
+
 import it.unibo.flexmultimod.core.language.Language.*
 import it.unibo.flexmultimod.core.{Component, Peer}
 import it.unibo.flexmultimod.core.language.Macroprogram
@@ -17,13 +18,14 @@ object LanguageMacro:
 
   private def noCodeBetweenComponentsOrRaise(using quotes: Quotes)(programBody: quotes.reflect.Block): Unit =
     import quotes.reflect.*
-    val Block(statements, _) = programBody
-    statements
-      .map(stmt => stmt -> containsComponent(using quotes)(stmt))
-      .filterNot: (_, isComponent) =>
-        isComponent
-      .foreach: (stmt, _) =>
-        report.errorAndAbort(s"Code between components is not allowed: ${stmt.show}", stmt.pos)
+    programBody match
+      case Block(statements, _) =>
+        statements
+          .map(stmt => stmt -> containsComponent(using quotes)(stmt))
+          .filterNot: (_, isComponent) =>
+            isComponent
+          .foreach: (stmt, _) =>
+            report.errorAndAbort(s"Code between components is not allowed: ${stmt.show}", stmt.pos)
 
   private def containsComponent(using quotes: Quotes)(statement: quotes.reflect.Statement): Boolean =
     import quotes.reflect.*

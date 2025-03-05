@@ -39,8 +39,8 @@ object ShowAlert1 extends Component[AlertInput, Unit]:
   override type RequiredCapabilities = WithNotification
   override def apply[PlacedPeer <: Peer & RequiredCapabilities](inputs: AlertInput): Unit = ???
 
-object Foo:
-  given st: Smartphone TiedWith Wearable & Edge & Cloud = deriveTie
-  given we: Wearable TiedWith Smartphone = deriveTie
-  given ed: Edge TiedWith Cloud & Smartphone = deriveTie
-  given cl: Cloud TiedWith Edge & Smartphone = deriveTie
+//object Foo:
+//  given st: Smartphone TiedWith Wearable & Edge & Cloud = deriveTie
+//  given we: Wearable TiedWith Smartphone = deriveTie
+//  given ed: Edge TiedWith Cloud & Smartphone = deriveTie
+//  given cl: Cloud TiedWith Edge & Smartphone = deriveTie

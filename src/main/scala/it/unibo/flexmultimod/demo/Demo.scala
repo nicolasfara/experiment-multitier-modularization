@@ -1,7 +1,7 @@
 package it.unibo.flexmultimod.demo
 
 import it.unibo.flexmultimod.core.Cardinality.*
-import it.unibo.flexmultimod.core.{ApplicationPeer, Component, InfrastructuralPeer, Peer}
+import it.unibo.flexmultimod.core.*
 import it.unibo.flexmultimod.core.language.{Aggregate, Language, Macroprogram}
 import it.unibo.flexmultimod.platform.Platform
 import it.unibo.flexmultimod.core.language.Language.*

@@ -1,9 +1,9 @@
 package it.unibo.flexmultimod.core.language
 
+import scala.annotation.showAsInfix
+
 import it.unibo.flexmultimod.core.Peer
 import it.unibo.flexmultimod.core.language.meta.LanguageMacro.programMacroImpl
-
-import scala.annotation.showAsInfix
 
 object Language:
   /** Represents the scope of a computation that occurs in the [[PlacedPeer]] context.

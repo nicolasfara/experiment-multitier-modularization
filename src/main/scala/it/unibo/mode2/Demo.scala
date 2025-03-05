@@ -1,6 +1,6 @@
 package it.unibo.mode2
 
-import it.unibo.mode2.language.{Application, CollectiveComponent, Infrastructural, LocalComponent, SharedData}
+import it.unibo.mode2.language.*
 
 trait WithAccelerometer
 trait WithGps

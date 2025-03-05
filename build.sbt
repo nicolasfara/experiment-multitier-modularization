@@ -24,7 +24,7 @@ ThisBuild / developers := List(
 )
 ThisBuild / libraryDependencies ++= Seq(
   "org.typelevel" %%% "cats-core" % "2.12.0",
-  "org.scalatest" %%% "scalatest" % "3.2.19" % Test,
+  "org.scalatest" %%% "scalatest" % "3.2.19" % Test
 )
 ThisBuild / coverageEnabled := true
 ThisBuild / semanticdbEnabled := true
@@ -60,5 +60,5 @@ lazy val root = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     sonatypeCredentialHost := "s01.oss.sonatype.org",
     sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
     sonatypeProfileName := "it.nicolasfarabegoli",
-    libraryDependencies ++= Seq(),
+    libraryDependencies ++= Seq()
   )
