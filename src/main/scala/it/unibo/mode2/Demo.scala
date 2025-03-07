@@ -1,39 +1,75 @@
 package it.unibo.mode2
 
 import it.unibo.mode2.language.*
+import it.unibo.mode2.platform.Context
+import scala.concurrent.duration.*
 
-trait WithAccelerometer
-trait WithGps
-trait WithAlert
+case class Coordinate(latitude: Double, longitude: Double)
+case class Axis(x: Double, y: Double, z: Double)
 
-object PositionSensor extends LocalComponent[EmptyTuple, (Double, Double)]:
-  override type Capabilities = WithAccelerometer | WithGps
-  override def apply(input: EmptyTuple): (Double, Double) = ???
+/** Behavioral capabilities
+  */
+trait Accelerometer:
+  def readAccelerometer: Axis
 
-object HeartbeatSensor extends LocalComponent[EmptyTuple, Int]:
-  override type Capabilities = WithAccelerometer
-  override def apply(input: EmptyTuple): Int = ???
+trait Gps:
+  def getPosition: Coordinate
 
-object RegionsHeartbeatDetection extends CollectiveComponent[(Double, Double) *: Int *: EmptyTuple, Boolean]:
-  override type Capabilities = WithAlert
-  override def apply(input: (Double, Double) *: Int *: EmptyTuple): SharedData ?=> Boolean = ???
+trait HighComputation
 
-object AlertActuation extends LocalComponent[Boolean *: EmptyTuple, Unit]:
-  override type Capabilities = WithGps
-  override def apply(input: Boolean *: EmptyTuple): Unit = ???
+trait Alert:
+  def sendAlert(dangerZone: Boolean): Unit
+
+trait HeartbeatSensor:
+  def heartbeat: Int
+
+// Component Definitions ------------------------------------------------
+
+object PositionSensor extends LocalComponent[EmptyTuple, Coordinate], Periodic(10.seconds):
+  override type Capabilities = Accelerometer | Gps
+  override def apply(input: EmptyTuple): Context ?=> Coordinate =
+    val result: Coordinate = withCapability:
+      case accelerometer: Accelerometer =>
+        accelerometer.readAccelerometer
+        ???
+      case gps: Gps =>
+        gps.getPosition
+        ???
+    result
+end PositionSensor
+
+object HeartbeatAcquisition extends LocalComponent[EmptyTuple, Int], Periodic(1.second):
+  override type Capabilities = HeartbeatSensor
+  override def apply(input: EmptyTuple): Context ?=> Int = withCapability:
+    case heartbeatSensor: HeartbeatSensor => heartbeatSensor.heartbeat
+end HeartbeatAcquisition
+
+object RegionsHeartbeatDetection extends CollectiveComponent[(Coordinate, Int), Boolean], Periodic(5.seconds):
+  override type Capabilities = HighComputation
+  override def apply(input: (Coordinate, Int)): Context ?=> Boolean =
+    val neighbors = sharedData.neighborValues
+    // Compute the heartbeat in the zone
+    ???
+end RegionsHeartbeatDetection
+
+object AlertActuation extends LocalComponent[Boolean *: EmptyTuple, Unit], Periodic(2.seconds):
+  override type Capabilities = Alert
+  override def apply(input: Boolean *: EmptyTuple): Context ?=> Unit = withCapability:
+    case alert: Alert => alert.sendAlert(input.head)
+end AlertActuation
 
 // Infrastructure Definitions --------------------------------------------
 
 trait Smartphone extends Application:
-  override type Capabilities = WithAccelerometer & WithGps & WithAlert
+  override type Capabilities = Accelerometer & Gps & Alert
   override type Tie <: Smartphone & Wearable & Edge
 
 trait Wearable extends Infrastructural:
-  override type Capabilities = WithAccelerometer
+  override type Capabilities = Accelerometer & HeartbeatSensor
   override type Tie <: Wearable & Smartphone
 
 trait Edge extends Infrastructural:
-  override type Capabilities = Any
+  override type Capabilities = HighComputation
   override type Tie <: Edge & Smartphone
 
 object Smartphone1 extends Smartphone
@@ -51,16 +87,18 @@ def infrastructureSpecification(): Any =
   deployment:
     forDevice(Smartphone1):
       PositionSensor deployedOn Wearable1
+      HeartbeatAcquisition deployedOn Wearable1
+      RegionsHeartbeatDetection deployedOn Edge1
       AlertActuation deployedOn Smartphone1
-      RegionsHeartbeatDetection deployedOn Smartphone1
     forDevice(Smartphone2):
-      PositionSensor deployedOn Wearable2
+      PositionSensor deployedOn Smartphone2
+      HeartbeatAcquisition deployedOn Wearable2
+      RegionsHeartbeatDetection deployedOn Edge1
       AlertActuation deployedOn Smartphone2
-      RegionsHeartbeatDetection deployedOn Smartphone2
 
-def macroProgram(using SharedData): Any =
+def macroProgram(using Context): Any =
   val position = PositionSensor(EmptyTuple)
-  val heartbeat = HeartbeatSensor(EmptyTuple)
+  val heartbeat = HeartbeatAcquisition(EmptyTuple)
   val alert = RegionsHeartbeatDetection(position *: heartbeat *: EmptyTuple)
   AlertActuation(alert *: EmptyTuple)
 
