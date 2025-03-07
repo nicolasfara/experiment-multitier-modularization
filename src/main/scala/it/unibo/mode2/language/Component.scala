@@ -11,7 +11,7 @@ sealed trait Component[-Input <: Product, +Output]:
 
 trait LocalComponent[-Input <: Product, +Output] extends Component[Input, Output]:
   self: SchedulingPolicy =>
-  
+
   def apply(input: Input): Context ?=> Output
 
 trait CollectiveComponent[-Input <: Product, +Output] extends Component[Input, Output]:
