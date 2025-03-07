@@ -1,4 +1,3 @@
 package it.unibo.mode2.platform
 
-trait Platform:
-  type Cap
+trait Platform
