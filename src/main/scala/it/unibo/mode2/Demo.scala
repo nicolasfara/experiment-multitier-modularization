@@ -1,10 +1,9 @@
 package it.unibo.mode2
 
 import scala.concurrent.duration.*
-
-import it.unibo.mode2.language.component.{CollectiveComponent, LocalComponent}
 import it.unibo.mode2.language.deployment.{Application, Infrastructural}
-import it.unibo.mode2.language.scheduling.{DependentScheduling, Periodic, SchedulingPolicy}
+import it.unibo.mode2.model.component.{CollectiveComponent, LocalComponent}
+import it.unibo.mode2.model.scheduling.{DeferredScheduling, Periodic, SchedulingPolicy}
 import it.unibo.mode2.platform.Context
 
 case class Coordinate(latitude: Double, longitude: Double)
@@ -30,7 +29,7 @@ trait HeartbeatSensor:
 
 // Component Definitions ------------------------------------------------
 
-object PositionSensor extends LocalComponent[EmptyTuple, Coordinate], DependentScheduling:
+object PositionSensor extends LocalComponent[EmptyTuple, Coordinate], DeferredScheduling:
   override type Capabilities = Accelerometer | Gps
 
   override def schedulingPolicy(using Context): SchedulingPolicy = withCapability:

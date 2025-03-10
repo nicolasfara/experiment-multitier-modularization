@@ -1,8 +1,8 @@
 package it.unibo.mode2.platform
 
-import it.unibo.mode2.language.component.CollectiveComponent
 import it.unibo.mode2.language.deployment.Application
 import it.unibo.mode2.model.CollectiveData
+import it.unibo.mode2.model.component.CollectiveComponent
 
 trait Context:
   type DeviceId

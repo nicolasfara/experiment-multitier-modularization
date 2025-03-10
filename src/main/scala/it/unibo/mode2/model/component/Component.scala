@@ -1,7 +1,7 @@
-package it.unibo.mode2.language.component
+package it.unibo.mode2.model.component
 
-import it.unibo.mode2.language.scheduling.SchedulingPolicy
 import it.unibo.mode2.model.CollectiveData
+import it.unibo.mode2.model.scheduling.SchedulingPolicy
 import it.unibo.mode2.platform.Context
 
 sealed trait Component[-Input <: Product, +Output]:
