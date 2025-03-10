@@ -1,4 +1,4 @@
-package it.unibo.mode2.language
+package it.unibo.mode2.language.deployment
 
 import scala.annotation.showAsInfix
 

@@ -1,11 +1,16 @@
 package it.unibo.mode2
 
-import it.unibo.mode2.language.*
-import it.unibo.mode2.platform.Context
 import scala.concurrent.duration.*
+
+import it.unibo.mode2.language.component.{CollectiveComponent, LocalComponent}
+import it.unibo.mode2.language.deployment.{Application, Infrastructural}
+import it.unibo.mode2.language.scheduling.{DependentScheduling, Periodic, SchedulingPolicy}
+import it.unibo.mode2.platform.Context
 
 case class Coordinate(latitude: Double, longitude: Double)
 case class Axis(x: Double, y: Double, z: Double)
+
+// Component Capabilities ------------------------------------------------
 
 /** Behavioral capabilities
   */
@@ -25,8 +30,13 @@ trait HeartbeatSensor:
 
 // Component Definitions ------------------------------------------------
 
-object PositionSensor extends LocalComponent[EmptyTuple, Coordinate], Periodic(10.seconds):
+object PositionSensor extends LocalComponent[EmptyTuple, Coordinate], DependentScheduling:
   override type Capabilities = Accelerometer | Gps
+
+  override def schedulingPolicy(using Context): SchedulingPolicy = withCapability:
+    case _: Accelerometer => Periodic(100.milliseconds)
+    case _: Gps           => Periodic(1.second)
+
   override def apply(input: EmptyTuple): Context ?=> Coordinate =
     val result: Coordinate = withCapability:
       case accelerometer: Accelerometer =>
@@ -81,7 +91,7 @@ object Edge1 extends Edge
 //object ApplicationSmartphone extends Smartphone
 //object InfrastructuralWearable extends Wearable
 
-import it.unibo.mode2.language.InfrastructuralDsl.*
+import it.unibo.mode2.language.deployment.InfrastructuralDsl.*
 
 def infrastructureSpecification(): Any =
   deployment:

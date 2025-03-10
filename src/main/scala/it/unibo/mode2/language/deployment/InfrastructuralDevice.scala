@@ -1,4 +1,6 @@
-package it.unibo.mode2.language
+package it.unibo.mode2.language.deployment
+
+import it.unibo.mode2.language.component.Component
 
 sealed trait Device:
   type Capabilities

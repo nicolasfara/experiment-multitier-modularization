@@ -302,7 +302,7 @@
         "platform": {
             "name": "jvm",
             "config": {
-                "home": "/usr/lib/jvm/java-17-openjdk",
+                "home": "/usr/lib/jvm/java-23-openjdk",
                 "options": [
                     "-Duser.dir=/home/nicolas/Documents/repos/experiment-multitier-modularization/project"
                 ]
@@ -311,7 +311,7 @@
                 
             ],
             "runtimeConfig": {
-                "home": "/usr/lib/jvm/java-17-openjdk",
+                "home": "/usr/lib/jvm/java-23-openjdk",
                 "options": [
                     "-Duser.dir=/home/nicolas/Documents/repos/experiment-multitier-modularization/project"
                 ]

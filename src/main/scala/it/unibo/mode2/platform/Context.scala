@@ -1,6 +1,7 @@
 package it.unibo.mode2.platform
 
-import it.unibo.mode2.language.CollectiveComponent
+import it.unibo.mode2.language.component.CollectiveComponent
+import it.unibo.mode2.language.deployment.Application
 import it.unibo.mode2.model.CollectiveData
 
 trait Context:
@@ -8,7 +9,7 @@ trait Context:
   def collectiveDataFor[Data, C <: CollectiveComponent[?, Data]](component: C): CollectiveData[DeviceId, Data]
 
 object Context:
-  /** A device context identified by an [[it.unibo.mode2.language.Application]] [[id]] given a [[platform]] managing it.
+  /** A device context identified by an [[Application]] [[id]] given a [[platform]] managing it.
     */
   def apply[Id](id: Id)(using platform: Platform): Context = new Context:
     type DeviceId = Id
