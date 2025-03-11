@@ -1,8 +1,8 @@
-package it.unibo.mode2.model.component
+package it.unibo.macs4s.model.component
 
-import it.unibo.mode2.model.CollectiveData
-import it.unibo.mode2.model.scheduling.SchedulingPolicy
-import it.unibo.mode2.platform.Context
+import it.unibo.macs4s.model.CollectiveData
+import it.unibo.macs4s.model.scheduling.SchedulingPolicy
+import it.unibo.macs4s.platform.Context
 
 sealed trait Component[-Input <: Product, +Output]:
   self: SchedulingPolicy =>

@@ -1,4 +1,4 @@
-package it.unibo.mode2.model
+package it.unibo.macs4s.model
 
 import scala.collection.MapView
 

@@ -1,6 +1,6 @@
-package it.unibo.mode2.language.deployment
+package it.unibo.macs4s.language.deployment
 
-import it.unibo.mode2.model.component.Component
+import it.unibo.macs4s.model.component.Component
 
 sealed trait Device:
   type Capabilities
@@ -25,6 +25,8 @@ object InfrastructuralDsl:
   def forDevice[A <: Application](device: A)(init: DeviceDeploymentScope ?=> Unit)(using MacroDeploymentScope): Unit =
     given t: DeviceDeploymentScope = new DeviceDeploymentScope
 
-  extension [C <: Component[?, ?], D <: Device, A <: Application](component: C)
-    infix def deployedOn(device: D)(using device.Capabilities <:< component.Capabilities): Placement[C, D] =
+  extension [C <: Component[?, ?], D <: Device](component: C)
+    infix def deployedOn(
+        device: D
+    )(using device.Capabilities <:< component.Capabilities, DeviceDeploymentScope): Placement[C, D] =
       Placement(component, device)

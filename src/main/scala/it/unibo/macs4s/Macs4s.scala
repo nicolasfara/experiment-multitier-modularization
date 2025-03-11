@@ -1,10 +1,11 @@
-package it.unibo.mode2
+package it.unibo.macs4s
 
 import scala.concurrent.duration.*
-import it.unibo.mode2.language.deployment.{Application, Infrastructural}
-import it.unibo.mode2.model.component.{CollectiveComponent, LocalComponent}
-import it.unibo.mode2.model.scheduling.{DeferredScheduling, Periodic, SchedulingPolicy}
-import it.unibo.mode2.platform.Context
+
+import it.unibo.macs4s.language.deployment.{Application, Infrastructural}
+import it.unibo.macs4s.model.component.{CollectiveComponent, LocalComponent}
+import it.unibo.macs4s.model.scheduling.{DeferredScheduling, Periodic, SchedulingPolicy}
+import it.unibo.macs4s.platform.Context
 
 case class Coordinate(latitude: Double, longitude: Double)
 case class Axis(x: Double, y: Double, z: Double)
@@ -90,7 +91,7 @@ object Edge1 extends Edge
 //object ApplicationSmartphone extends Smartphone
 //object InfrastructuralWearable extends Wearable
 
-import it.unibo.mode2.language.deployment.InfrastructuralDsl.*
+import it.unibo.macs4s.language.deployment.InfrastructuralDsl.*
 
 def infrastructureSpecification(): Any =
   deployment:
@@ -105,6 +106,20 @@ def infrastructureSpecification(): Any =
       RegionsHeartbeatDetection deployedOn Edge1
       AlertActuation deployedOn Smartphone2
 
+/** Consider a macro expansion that wraps the components into a "branched" execution based on the device on which the
+  * component is executed
+  *
+  * The macro expansion should be able to generate the following code:
+  * {{{
+  *    val position = if isExecutedLocally[PositionSensor.type] then
+  *       PositionSensor(EmptyTuple) else ctx.outputFromRemote[PositionSensor.type](EmptyTuple)
+  *    val heartbeat = if isExecutedLocally[HeartbeatAcquisition.type] then
+  *       HeartbeatAcquisition(EmptyTuple) else ctx.outputFromRemote[HeartbeatAcquisition.type](EmptyTuple)
+  *    val alert = if isExecutedLocally[RegionsHeartbeatDetection.type] then
+  *       RegionsHeartbeatDetection(position *: heartbeat *: EmptyTuple) else ctx.outputFromRemote[RegionsHeartbeatDetection.type](position *: heartbeat *: EmptyTuple)
+  *    if isExecutedLocally[AlertActuation.type] then AlertActuation(alert *: EmptyTuple) else ctx.outputFromRemote[AlertActuation.type](alert *: EmptyTuple)
+  * }}}
+  */
 def macroProgram(using Context): Any =
   val position = PositionSensor(EmptyTuple)
   val heartbeat = HeartbeatAcquisition(EmptyTuple)

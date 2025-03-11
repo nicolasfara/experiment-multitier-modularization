@@ -1,8 +1,8 @@
-package it.unibo.mode2.language.deployment
+package it.unibo.macs4s.language.deployment
 
 import scala.annotation.showAsInfix
 
-import it.unibo.mode2.PositionSensor
+import it.unibo.macs4s.PositionSensor
 
 /** Tentative DSL for binding components:
   * {{{

@@ -1,8 +1,8 @@
-package it.unibo.mode2.platform
+package it.unibo.macs4s.platform
 
-import it.unibo.mode2.language.deployment.Application
-import it.unibo.mode2.model.CollectiveData
-import it.unibo.mode2.model.component.CollectiveComponent
+import it.unibo.macs4s.language.deployment.Application
+import it.unibo.macs4s.model.CollectiveData
+import it.unibo.macs4s.model.component.CollectiveComponent
 
 trait Context:
   type DeviceId
