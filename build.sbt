@@ -41,21 +41,21 @@ ThisBuild / scalacOptions ++= Seq(
   "-Yretain-trees"
 )
 
-lazy val root = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .crossType(CrossType.Pure)
-  .in(file("."))
-  .nativeSettings(
-    nativeConfig ~= {
-      _.withLTO(LTO.default)
-        .withMode(Mode.releaseSize)
-        .withGC(GC.immix)
-    }
-  )
-  .jsSettings(
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.0",
-    scalaJSUseMainModuleInitializer := true,
-    scalaJSLinkerConfig ~= { _.withOptimizer(true) }
-  )
+lazy val root = project //crossProject(JSPlatform, JVMPlatform, NativePlatform)
+//  .crossType(CrossType.Pure)
+//  .in(file("."))
+//  .nativeSettings(
+//    nativeConfig ~= {
+//      _.withLTO(LTO.default)
+//        .withMode(Mode.releaseSize)
+//        .withGC(GC.immix)
+//    }
+//  )
+//  .jsSettings(
+//    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.0",
+//    scalaJSUseMainModuleInitializer := true,
+//    scalaJSLinkerConfig ~= { _.withOptimizer(true) }
+//  )
   .settings(
     name := "Template-for-Scala-Multiplatform-Projects",
     sonatypeCredentialHost := "s01.oss.sonatype.org",
