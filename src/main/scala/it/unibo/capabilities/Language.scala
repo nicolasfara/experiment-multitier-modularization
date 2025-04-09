@@ -15,6 +15,8 @@ object Language:
     case Provided(cap: Cap, ctx: DeviceContext)
     case NotProvided(ctx: RemoteContext)
 
+  infix type requires[Result, Cap] = Capability[Cap] ?=> Result
+
   class Scope
 
   def macroprogram[Cap](capability: Cap)(body: (TaggedCapability[Cap], Scope) ?=> Unit): Unit =
@@ -24,7 +26,7 @@ object Language:
 
   def capability[Cap](using cap: Capability[Cap]): Cap = cap match
     case Provided(capability, _) => capability
-    case NotProvided(_)          => throw new RuntimeException("Capability not provided")
+    case NotProvided(_)          => throw new Exception("Capability not provided")
 
   def function[Cap, Output](using cap: Capability[Cap])(body: Cap ?=> Output): Output = cap match
     case Provided(capability, ctx) => println("Hey, I have the capabilities!"); body(using capability)
@@ -44,17 +46,21 @@ object Language:
     def bar: Int = 10
   class C extends A, B
 
-  def myFunction: Capability[A | B] ?=> Unit = function:
+  def myFunction: Unit requires A & B = function:
     capability[A | B] match
       case ab: (A & B) => println("I's an A and B")
       case aCap: A => println("I's an A")
       case bCap: B => println("I's a B")
     println(s"capability: ${summon[A | B]}")
 
+  def myOtherFunction: Int requires B = function:
+    capability[B].bar
+
   def pure =
     println("Pure function")
     10
 
-  macroprogram(new A() {}):
+  macroprogram(C()):
     pure
     myFunction
+    myOtherFunction
