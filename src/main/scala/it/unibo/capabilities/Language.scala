@@ -23,7 +23,12 @@ object Language:
 
   infix opaque type on[Result, Refined] = On[Result, Refined]
 
-  def placed[Result, Place <: Cap, Cap](using Capability[Cap])(body: Cap ?=> Result): on[Result, Place :| Cap] = ???
+  extension [Result, Refined](on: on[Result, Refined])
+    def asLocal: Result = on.result
+
+  def withCapability[Result, Place <: Cap, Cap](using Capability[Cap])(body: Cap ?=> Result): on[Result, Place :| Cap] = ???
+
+  def plain[Result, Place](body: => Result): on[Result, Place] = ???
 
   class Scope
 
@@ -54,25 +59,13 @@ object Language:
     def bar: Int = 10
   class C extends A, B
 
-//  def foo: Int on A requiring B = 20
-  def foo(): Int on C :| A = placed:
+  def myfunction(): Int on C :| B = withCapability:
     capability[C].foo
     12
 
-  def myFunction: Unit requires A | B = function:
-    capability[A | B] match
-      case _: (A & B) => println("I's an A and B")
-      case _: A       => println("I's an A")
-      case _: B       => println("I's a B")
-
-  def myOtherFunction: Int requires String = function:
-    capability[B].bar
-
-  def pure =
-    println("Pure function")
-    10
+  def otherFunction(input: Int): String on C = plain:
+    s"Hello $input"
 
   macroprogram(C()):
-    pure
-    myFunction
-    myOtherFunction
+    val result = myfunction()
+    otherFunction(result.asLocal)
