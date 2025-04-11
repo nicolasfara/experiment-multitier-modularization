@@ -11,11 +11,19 @@ object Language:
   final class DeviceContext extends Context
   final class RemoteContext extends Context
 
+  infix type requires[Result, Cap] = Capability[Cap] ?=> Result
+
   enum Capability[+Cap]:
     case Provided(cap: Cap, ctx: DeviceContext)
     case NotProvided(ctx: RemoteContext)
 
-  infix type requires[Result, Cap] = Capability[Cap] ?=> Result
+  infix type :|[Place <: Cap, Cap] = Capability[Cap] ?=> Place
+
+  private case class On[Result, Refined](result: Result)
+
+  infix opaque type on[Result, Refined] = On[Result, Refined]
+
+  def placed[Result, Place <: Cap, Cap](using Capability[Cap])(body: Cap ?=> Result): on[Result, Place :| Cap] = ???
 
   class Scope
 
@@ -46,14 +54,18 @@ object Language:
     def bar: Int = 10
   class C extends A, B
 
-  def myFunction: Unit requires A & B = function:
-    capability[A | B] match
-      case ab: (A & B) => println("I's an A and B")
-      case aCap: A => println("I's an A")
-      case bCap: B => println("I's a B")
-    println(s"capability: ${summon[A | B]}")
+//  def foo: Int on A requiring B = 20
+  def foo(): Int on C :| A = placed:
+    capability[C].foo
+    12
 
-  def myOtherFunction: Int requires B = function:
+  def myFunction: Unit requires A | B = function:
+    capability[A | B] match
+      case _: (A & B) => println("I's an A and B")
+      case _: A       => println("I's an A")
+      case _: B       => println("I's a B")
+
+  def myOtherFunction: Int requires String = function:
     capability[B].bar
 
   def pure =

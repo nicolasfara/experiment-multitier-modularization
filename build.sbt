@@ -57,7 +57,7 @@ lazy val root = project //crossProject(JSPlatform, JVMPlatform, NativePlatform)
 //    scalaJSLinkerConfig ~= { _.withOptimizer(true) }
 //  )
   .settings(
-    name := "Template-for-Scala-Multiplatform-Projects",
+    name := "root",
     sonatypeCredentialHost := "s01.oss.sonatype.org",
     sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
     sonatypeProfileName := "it.nicolasfarabegoli",
