@@ -120,3 +120,50 @@ Here, collectiveFunction is a function that:
 - requires both `Collective` and `WithGps` capabilities
 - can run on either `Smartphone` or `Wearable`
 - may interact with neighboring devices during execution
+
+## Macroprogram definition
+
+We refer to *macroprogram* as the system specification where in a single program all the components and their interactions are defined.
+To define the interactions between components in a single program, we adopt the concept of "scoping" to determine where a data is produced,
+where it will be transferred to other tiers, and where it will be consumed.
+
+Two primitives are used to define the scope of a data:
+- `on[Tier]` specifies that the block of code is executed on the specified tier
+- `asLocal` specifies that the result of the block of code is "transferred" to the local tier (if the two tiers are connected)
+
+```scala 3
+import it.unibo.flexmultimod.demo.MacroApp.{Smartphone, Wearable}
+
+type Smartphone <: { type Tie <: Single[Wearable] }
+type Wearable <: { type Tie <: Single[Smartphone] }
+
+def getPosition: (Double, Double) on Wearable :| WithGps = constrained:
+  // get the position of the smartphone
+  (0.0, 0.0)
+  
+def distanceFromSource(
+    source: Boolean,
+    position: (Double, Double)
+): Double on (Wearable | Smartphone) :| WithCollective = collective:
+  ???
+  
+def showDistanceOnUi(distance: Double): Unit on Smartphone = plain:
+  // show the distance on the smartphone UI
+  println(s"Distance: $distance")
+
+def macroProgram = macroprogram[Smartphone]:
+    val myPosition = on[Wearable] { getPosition }.asLocal
+    val isSource = env[Boolean]("isSource") // access the smartphone environment
+    val distance = distanceFromSource(isSource).asLocal
+    showDistanceOnUi(distance)
+```
+
+In this example, the macroprogram specifies that the `Smartphone` is the application device (the tier we want to control),
+and the `Wearable` is the infrastructural device.
+
+The `getPosition` function is executed on the `Wearable` tier and returns the position of the smartphone.
+The `distanceFromSource` function is executed on either the `Wearable` or `Smartphone` tier and calculates the distance from the source;
+in the example, it is executed on the `Smartphone` tier.
+The `showDistanceOnUi` function is executed on the `Smartphone` tier and shows the distance on the smartphone UI.
+
+
