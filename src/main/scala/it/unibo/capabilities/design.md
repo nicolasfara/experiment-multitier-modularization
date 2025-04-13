@@ -1,34 +1,36 @@
 # Capability-based refinement placed types
 
-We present the design of a capability-based refinement type for placed types.
-The goal is to provide a flexible framework for specifying partitioned (also collective) multitier systems
+We present the design of a capability-based refinement type system for placed types.
+The goal is to provide a flexible framework for specifying partitioned (or collective) multitier systems,
 where each function (or component) can require certain capabilities to be executed.
-Similar to the concept of "placement types" (as presented in ScalaLoci),
-we enrich the type signature of a function with the host(s) on which it will be executed,
-plus the capabilities required by the function.
-In this way, the "place" on which the function will be executed must be compatible with the capabilities required by the function.
-In this domain, a capability is an accessible resource (e.g., a GPS sensor, a router, etc.) that can be used by the function.
 
-Other than checking valid placements, the type system can also check if the host on which the function is executed
-can provide the required capabilities,
-intercepting at compile time wrong placements both in terms of communication between two non-tied hosts,
-and in terms of missing capabilities.
-With this design, we neatly separate "where" the function is executed from "what" is required to execute it.
-Thanks to this separation, the hosts is not only a phantom type used to validate the placement,
-but it is an active part of the system providing functionalities expressed in terms of capabilities.
+Building on the concept of placement types (as introduced in ScalaLoci),
+we enrich the type signature of a function with both:
+- the host(s) on which it is to be executed, and
+- the capabilities required by the function.
 
-Capabilities are not mandatory in the type signature of a function,
-meaning that a function has no restrictions on which host it can be executed.
-For this reason, we can distinguish between "plain" functions (requiring no capabilities) and "constrained" functions
-(requiring capabilities).
+This ensures that the host where the function is executed is compatible with the function’s capability requirements.
+In this context, a capability is an accessible resource (e.g., a GPS sensor, a router, etc.) that the function depends on.
 
-With this model, it is possible to trivially encode "collective" functions via the use of a "collective" capability.
-This capability can be employed to enable collective behavior, namely enable a neighbor-based interaction.
+In addition to verifying valid placements, the type system can also check whether the host provides the required capabilities.
+This allows the compiler to catch invalid placements—both in terms of communication between unrelated hosts and missing capabilities—at compile time.
+
+This design neatly separates *where* a function is executed from *what* it needs to execute.
+Thanks to this separation, a host is no longer just a phantom type used to validate placement—it becomes an active part of the system, offering functionalities expressed in terms of capabilities.
+
+Capabilities are optional in a function’s type signature.
+If omitted, the function can be executed on any compatible host regardless of available capabilities.
+This leads to a natural distinction between:
+- **Plain functions**, which require no capabilities, and
+- **Constrained functions**, which require specific capabilities.
+
+Using this model, we can also trivially encode collective functions through a `Collective` capability.
+This enables neighbor-based interactions between hosts.
 
 ## Plain functions
 
-As introduced in the previous section, a plain function is a function that does not require any capability to be executed.
-Nevertheless, it must define on which possible host it can be executed via placement types.
+A *plain function* does not require any capabilities.
+However, it still declares where it can be executed through placement types.
 
 ```scala 3
 import it.unibo.flexmultimod.demo.MacroApp.{Smartphone, Wearable}
@@ -49,8 +51,8 @@ To express this placement constraint, we use the `|` operator expressing the fac
 
 ## Constrained functions
 
-A constrained function is a function that requires certain capabilities to be executed.
-In its type signature, other than the placement type, it also specifies the capabilities required by the function.
+A *constrained function* requires certain capabilities to be executed.
+In addition to placement, its type signature includes the required capabilities.
 
 ```scala 3
 import it.unibo.flexmultimod.demo.WithGps
@@ -114,6 +116,7 @@ def collectiveFunction(input: Int): Int on (Smartphone | Wearable) :| WithCollec
   ???
 ```
 
-In this example, the `collectiveFunction` is a collective function that takes an `Int` as input and returns an `Int`,
-but the final result will be computed in a collective way,
-namely requiring the interaction with neighbor devices on which the function is executed.
+Here, collectiveFunction is a function that:
+- requires both `Collective` and `WithGps` capabilities
+- can run on either `Smartphone` or `Wearable`
+- may interact with neighboring devices during execution
