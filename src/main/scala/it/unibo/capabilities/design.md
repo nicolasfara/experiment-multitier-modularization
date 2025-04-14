@@ -154,7 +154,7 @@ def showDistanceOnUi(distance: Double): Unit on Smartphone = plain:
 def macroProgram = macroprogram[Smartphone]:
     val myPosition = on[Wearable] { getPosition }.asLocal
     val isSource = env[Boolean]("isSource") // access the smartphone environment
-    val distance = distanceFromSource(isSource).asLocal
+    val distance = distanceFromSource(isSource, myPosition).asLocal
     showDistanceOnUi(distance)
 ```
 
@@ -165,5 +165,3 @@ The `getPosition` function is executed on the `Wearable` tier and returns the po
 The `distanceFromSource` function is executed on either the `Wearable` or `Smartphone` tier and calculates the distance from the source;
 in the example, it is executed on the `Smartphone` tier.
 The `showDistanceOnUi` function is executed on the `Smartphone` tier and shows the distance on the smartphone UI.
-
-
