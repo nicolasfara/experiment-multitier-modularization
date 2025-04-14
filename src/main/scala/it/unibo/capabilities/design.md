@@ -17,7 +17,7 @@ Moreover, there may be some dependencies between the functionalities provided by
 It is clear that not all the functionalities required by the program can be executed on the same device,
 and for this reason, the system should be partitioned to be able to execute the program.
 
-In this context, pulverization models (!@cite) help to *partition* the system into different components wired together,
+In this context, pulverization models [^1] help to *partition* the system into different components wired together,
 determining the overall (collective) system specification.
 However, these models do not capture as a first-class citizen the *placement* of the components,
 neither the *capabilities* of the hosts where the components are executed.
@@ -211,3 +211,8 @@ The `getPosition` function is executed on the `Wearable` tier and returns the po
 The `distanceFromSource` function is executed on either the `Wearable` or `Smartphone` tier and calculates the distance from the source;
 in the example, it is executed on the `Smartphone` tier.
 The `showDistanceOnUi` function is executed on the `Smartphone` tier and shows the distance on the smartphone UI.
+
+## References
+
+[^1]: Nicolas Farabegoli, Mirko Viroli, & Roberto Casadei (2024). Flexible Self-organisation for the Cloud-Edge Continuum: a Macro-programming Approach. In IEEE International Conference on Autonomic Computing and Self-Organizing Systems, ACSOS 2024, Aarhus, Denmark, September 16-20, 2024 (pp. 21–30). IEEE.
+
