@@ -19,7 +19,7 @@ determining the overall (collective) system specification.
 However, these models do not capture as a first-class citizen the *placement* of the components,
 neither the *capabilities* of the hosts where the components are executed.
 They provide a highly flexible way for partitioning the system, but they do not provide a way to specify 
-*where* the component can be executed and *what* are the requirements of it in terms of capabilities.
+*where* the components can be executed and *what* are the capabilities each component requires.
 
 Similarly, multitier programming approaches[^2] embed placement directly in a function's type,
 enabling compile-time validation of placements.
