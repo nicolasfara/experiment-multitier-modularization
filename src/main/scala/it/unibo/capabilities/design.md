@@ -45,7 +45,7 @@ We consider three types of functions:
 With this design, tiers are not only used as a "placeholder" (or phantom type) to validate the placement,
 but they contribute to provide a set of capabilities that the function can use to execute.
 
-Finally, thanks to the concept of _capabilities_ we can define **polimorphic functions** over the capabilities of the host;
+Finally, thanks to the concept of _capabilities_ we can define **polymorphic functions** over the capabilities of the host;
 this means that the actual implementation of the function can be different depending on the capabilities of the host where it is executed,
 preserving the same type signature.
 
