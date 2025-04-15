@@ -5,7 +5,7 @@
 Designing systems in the Cloud-Edge continuum—such as Collective Adaptive Systems (CAS) and the Internet of Things (IoT)—presents significant challenges.
 These systems consist of heterogeneous hosts and devices with diverse capabilities and resources, and must support proper communication and interaction across different tiers.
 
-In contrast to homogeneous systems, where each device can execute the entire macroprogram, heterogeneous systems require a more nuanced approach.
+In contrast to homogeneous systems, where each device can execute the entire macroprogram, heterogeneous systems require a different approach.
 For instance, wearables may offer capabilities like GPS or heart rate monitoring, while smartphones provide UI, connectivity, or notification services.
 Furthermore, some functionalities may depend on each other:
 - A smartphone might need heart rate data from a wearable to trigger a notification,
