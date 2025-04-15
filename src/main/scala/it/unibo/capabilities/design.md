@@ -2,46 +2,52 @@
 
 ## Motivation
 
-Facing heterogeneous systems, such as CAS (Collective Adaptive Systems) and IoT (Internet of Things) in the Cloud-Edge continuum era,
-is a challenging task: the system should account different hosts/devices with different capabilities and resources,
-and the different tiers of the system should be able to _properly_ communicate and _interact_ with each other.
+Designing systems in the Cloud-Edge continuum—such as Collective Adaptive Systems (CAS) and the Internet of Things (IoT)—presents significant challenges.
+These systems consist of heterogeneous hosts and devices with diverse capabilities and resources, and must support proper communication and interaction across different tiers.
 
-For example, in a system where smartphones, wearables, and other devices are involved,
-not all the devices can execute the whole (macro)program as supposed in homogeneous systems.
-Wearables can provide certain *capabilities* (e.g., GPS, heart rate monitor, etc.),
-while smartphones can provide others (e.g., UI, notifications, connectivity etc.).
-Moreover, there may be some dependencies between the functionalities provided by the different devices:
-- A smartphone in order to provide a notification to the user, it may need to know the heart rate of the user,
-- A heavy computation may be executed on a powerful device (e.g., a server) and the result sent to the smartphone to preserve battery life.
+In contrast to homogeneous systems, where each device can execute the entire macroprogram, heterogeneous systems require a more nuanced approach.
+For instance, wearables may offer capabilities like GPS or heart rate monitoring, while smartphones provide UI, connectivity, or notification services.
+Furthermore, some functionalities may depend on each other:
+- A smartphone might need heart rate data from a wearable to trigger a notification,
+- Intensive computation might be offloaded to a powerful server, with results returned to a smartphone to preserve battery life.
 
-It is clear that not all the functionalities required by the program can be executed on the same device,
-and for this reason, the system should be partitioned to be able to execute the program.
+Clearly, not all functionalities can be executed on a single device.
+Consequently, the system must be partitioned to enable distributed execution of the macroprogram.
 
-In this context, pulverization models[^1] help to *partition* the system into different components wired together,
+Pulverization models[^1] help to *partition* the system into interconnected components,
 determining the overall (collective) system specification.
 However, these models do not capture as a first-class citizen the *placement* of the components,
 neither the *capabilities* of the hosts where the components are executed.
 They provide a highly flexible way for partitioning the system, but they do not provide a way to specify 
 *where* the component can be executed and *what* are the requirements of it in terms of capabilities.
 
-Related approaches, as in the context of multitier programming[^2],
-provide a way to specify directly into the function's type the *placement* of it,
-letting the compiler checking the validity of the placement.
-Even though this approach solves the problem of placement, it does not provide a way to specify the *capabilities* required by the function,
-neither cover collective aspects of the system.
+Similarly, multitier programming approaches[^2] embed placement directly in a function's type,
+enabling compile-time validation of placements.
+While effective in addressing where a function can run, these models still do not specify which capabilities are required,
+nor do they account for collective behavior among components.
 
-With this work, we provide an extension of the concept of *placement types*
-with a capability-based refinement type system,
-where the type signature of a function includes both the placement and the capabilities required by the function.
-This allows to "constrain" the placement of a function to specific classes of hosts implementing the required capabilities,
-and to check at compile time the validity of the placement and the availability of the required capabilities.
-Finally, collectivity is also supported through a capability,
-which allows to specify that a function requires the interaction with the same function instance executed on other (neighboring) hosts,
-according to the pulverization model.
-In this way, tiers and not only used as a "placeholder" (or phantom type) to validate the placement,
+### Our contribution
+
+This work extends the concept of _placement types_ by integrating a **capability-based refinement type system**.
+In our approach:
+1. A function's type signature includes both its _placement_ and the _capabilities_ it requires,
+2. this allows the system to constrain function execution to hosts that satisfy both placement and capability requirements,
+3. encode collective behavior through _capabilities_.
+
+We consider three types of functions:
+
+- **Plain functions**: These functions do not require any capabilities. They can be executed on any compatible host.
+- **Constrained functions**: These functions require specific capabilities to be executed.
+  The type signature includes the required capabilities, and the system checks whether the host provides them.
+- **Collective functions**: These functions require the _collective_ capability to be executed.
+  This enables neighbor-based interactions between hosts.
+
+With this design, tiers are not only used as a "placeholder" (or phantom type) to validate the placement,
 but they contribute to provide a set of capabilities that the function can use to execute.
-In other words, the function is *polymorphic over the capabilities* of the host where it is executed,
-everything type-checked at compile time.
+
+Finally, thanks to the concept of _capabilities_ we can define **polimorphic functions** over the capabilities of the host;
+this means that the actual implementation of the function can be different depending on the capabilities of the host where it is executed,
+preserving the same type signature.
 
 ## Design
 
