@@ -284,3 +284,4 @@ The `showDistanceOnUi` function is executed on the `Smartphone` tier and shows t
 
 [^1]: Nicolas Farabegoli, Mirko Viroli, & Roberto Casadei (2024). Flexible Self-organisation for the Cloud-Edge Continuum: a Macro-programming Approach. In IEEE International Conference on Autonomic Computing and Self-Organizing Systems, ACSOS 2024, Aarhus, Denmark, September 16-20, 2024 (pp. 21–30). IEEE.
 [^2]: Pascal Weisenburger, Johannes Wirth, & Guido Salvaneschi (2021). A Survey of Multitier Programming. ACM Comput. Surv., 53(4), 81:1–81:35.
+[^3]: Beal, J., Pianini, D., & Viroli, M. (2015). Aggregate Programming for the Internet of Things. Computer, 48(9), 22-30.
