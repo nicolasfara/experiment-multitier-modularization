@@ -24,7 +24,7 @@ Engineering such "partitioned" systems requires extra care in the design phase, 
 - **Placement coherence**: the placement of the components should be coherent with the system architecture specification,
 - **Capability coherence**: the placement of the components should be coherent with the capabilities offered by the hosts.
 
-When engineering a collective system in the ECC, the aforementioned properties must be enforced at the design level.
+When engineering a collective system in the ECC, the aforementioned properties must be enforced at the design level to guarantee the system's reliability and performance.
 
 [//]: # ()
 [//]: # (In contrast to homogeneous systems, where each device can execute the entire macroprogram, heterogeneous systems require a different approach.)
