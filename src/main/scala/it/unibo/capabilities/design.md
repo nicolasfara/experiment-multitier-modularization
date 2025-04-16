@@ -5,30 +5,87 @@
 Designing systems in the Cloud-Edge continuum—such as Collective Adaptive Systems (CAS) and the Internet of Things (IoT)—presents significant challenges.
 These systems consist of heterogeneous hosts and devices with diverse capabilities and resources, and must support proper communication and interaction across different tiers.
 
-In contrast to homogeneous systems, where each device can execute the entire macroprogram, heterogeneous systems require a different approach.
-For instance, wearables may offer capabilities like GPS or heart rate monitoring, while smartphones provide UI, connectivity, or notification services.
-Furthermore, some functionalities may depend on each other:
-- A smartphone might need heart rate data from a wearable to trigger a notification,
-- Intensive computation might be offloaded to a powerful server, with results returned to a smartphone to preserve battery life.
+Traditional CASs suppose to be employed in homogeneous networks,
+where the same characteristics in terms of communication, sensing/actuation, and computation are shared by all the devices,
+supposing that all the devices can execute entirely the same program specification.
+On these assumptions, relevant frameworks such as Aggregate Computing[^3] has been proposed to program collective, large-scale, scalable systems.
+This paradigm allows to define the large-scale collective behavior of the system in a single (macro)program,
+leveraging spatio-temporal abstractions for encoding the system behavior.
+These collective abstractions guarantee self-* properties, such as self-organization, self-healing, and self-adaptation,
+making the system highly reliable and scalable even in the presence of device failures, network disconnections, and other unexpected disruptive events.
 
-Clearly, not all functionalities can be executed on a single device.
-Consequently, the system must be partitioned to enable distributed execution of the macroprogram.
+Homogeneous assumptions do not hold in non-homogeneous systems, such as the Cloud-Edge continuum.
+In these infrastructures, the device heterogeneity is the norm rather than the exception;
+even if from one side this heterogeneity can be opportunistically exploited to improve the system performance,
+from the other side it requires a shifting of the programming paradigm to a more flexible and modular one.
 
-Pulverization models[^1] help to *partition* the system into interconnected components,
-determining the overall (collective) system specification.
-However, these models do not capture as a first-class citizen the *placement* of the components,
-neither the *capabilities* of the hosts where the components are executed.
-They provide a highly flexible way for partitioning the system, but they do not provide a way to specify 
-*where* the components can be executed and *what* are the capabilities each component requires.
+Engineering such "partitioned" systems requires extra care in the design phase, preserving these properties:
+- **Functional equivalence**: the partitioned (macro)program should eventually behave like an equivalent monolithic version,
+- **Placement coherence**: the placement of the components should be coherent with the system architecture specification,
+- **Capability coherence**: the placement of the components should be coherent with the capabilities offered by the hosts.
 
-Similarly, multitier programming approaches[^2] embed placement directly in a function's type,
-enabling compile-time validation of placements.
-While effective in addressing where a function can run, these models still do not specify which capabilities are required,
-nor do they account for collective behavior among components.
+When engineering a collective system in the ECC, the aforementioned properties must be enforced at the design level.
+
+[//]: # ()
+[//]: # (In contrast to homogeneous systems, where each device can execute the entire macroprogram, heterogeneous systems require a different approach.)
+
+[//]: # (For instance, wearables may offer capabilities like GPS or heart rate monitoring, while smartphones provide UI, connectivity, or notification services.)
+
+[//]: # (Furthermore, some functionalities may depend on each other:)
+
+[//]: # (- A smartphone might need heart rate data from a wearable to trigger a notification,)
+
+[//]: # (- Intensive computation might be offloaded to a powerful server, with results returned to a smartphone to preserve battery life.)
+
+[//]: # ()
+[//]: # (Clearly, not all functionalities can be executed on a single device.)
+
+[//]: # (Consequently, the system must be partitioned to enable distributed execution of the macroprogram.)
+
+[//]: # ()
+[//]: # (Pulverization models[^1] help to *partition* the system into interconnected components,)
+
+[//]: # (determining the overall &#40;collective&#41; system specification.)
+
+[//]: # (However, these models do not capture as a first-class citizen the *placement* of the components,)
+
+[//]: # (neither the *capabilities* of the hosts where the components are executed.)
+
+[//]: # (They provide a highly flexible way for partitioning the system, but they do not provide a way to specify )
+
+[//]: # (*where* the components can be executed and *what* are the capabilities each component requires.)
+
+[//]: # ()
+[//]: # (Similarly, multitier programming approaches[^2] embed placement directly in a function's type,)
+
+[//]: # (enabling compile-time validation of placements.)
+
+[//]: # (While effective in addressing where a function can run, these models still do not specify which capabilities are required,)
+
+[//]: # (nor do they account for collective behavior among components.)
 
 ### Our contribution
 
-This work extends the concept of _placement types_ by integrating a **capability-based refinement type system**.
+In this work, we propose a **capability-based refinement type system** for placed types,
+for programming collective systems where once deployed in the continuum,
+the execution of the program is scattered across multiple heterogeneous devices,
+while preserving the same functional behavior of the system.
+
+The main goal is to preserve safety at the design level,
+providing the programmer a way to explicitly specify **where** a function can be placed,
+while constraining such "placement" with the **capabilities** required by the function to be executed,
+specifying **what** the function requires to be executed.
+
+Encoding such properties in the type system allows to catch errors at compile time,
+guaranteeing that the system is coherent with the architecture specification,
+and that the components are placed on hosts that provide the required capabilities,
+guaranteeing the last two properties mentioned above.
+The first property is partially covered by functions composition,
+where the type system checks that the output of a function is compatible with the input of another function.
+The remainder of the property will be covered by the underlying platform (or middleware),
+which will take care of resemble the distributed communication between the components.
+
+We extends the concept of _placement types_ by integrating a **capability-based refinement type system**.
 In our approach:
 1. A function's type signature includes both its _placement_ and the _capabilities_ it requires,
 2. this allows the system to constrain function execution to hosts that satisfy both placement and capability requirements,
