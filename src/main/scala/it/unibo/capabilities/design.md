@@ -187,6 +187,7 @@ the type checker will raise an error.
 
 ```scala 3
 import it.unibo.flexmultimod.demo.WithRouter
+
 type Smartphone <: WithRouter & { type Tie <: Single[Wearable] }
 type Wearable <: WithRouter & { type Tie <: Single[Smartphone] }
 
@@ -230,6 +231,33 @@ Here, collectiveFunction is a function that:
 - requires both `Collective` and `WithGps` capabilities
 - can run on either `Smartphone` or `Wearable`
 - may interact with neighboring devices during execution
+
+### Capability-controlled spatial interaction
+
+In heterogeneous systems like the ones we are considering,
+when specific collective operations are involved, we are interested to interact with neighboring devices providing certain capabilities.
+For example, a collective operation involving the share of the temperature sensor may involve only the devices equipped with a temperature sensor, excluding from the interaction the others.
+
+In this case, through the capability mechanism, we can control the interaction with the neighboring devices.
+This approach recalls the "branching" operator of Aggregate Computing, where the network is partitioned based on a certain boolean condition.
+In our design, we can achieve a similar behavior but encoded at the type level: in the signature, the required capabilities to perform the interaction are specified.
+If no capabilities are specified, the function can interact with all the neighbors without any restriction.
+
+```scala 3
+trait TempSensor:
+  def getTemperature: Double
+
+def capabilityControlledCollectiveFunction(): Int on Smartphone :| WithCollective & TempSensor = collective:
+  val capValue: Double :| TempSensor = capability[TempSensor].getTemperature
+  val onlyTemperatures = neighbors[Double :| TempSensor](capValue)
+  val plainCollective = neighbors[Double](10.0)
+  ???
+```
+
+Based on the example above, `onlyTemperatures` represents a collective data structure only provided by neighbor devices having the `TempSensor` capability.
+The `plainCollective` represents a collective data structure that can be provided by all the neighbors, regardless of their capabilities.
+Even if some similarities with the `branch` operator can be found, here we do not want to specify two possible branches of the program (or in other words, partition the network),
+we are just specifying that the collective result strictly depends on the specified capability.
 
 ### Macroprogram definition
 
