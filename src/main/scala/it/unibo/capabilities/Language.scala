@@ -7,6 +7,8 @@ import scala.util.NotGiven
 object Language:
   trait TaggedCapability[+Cap](val cap: Cap)
 
+  infix type at[Value, Place] = Place ?=> Value
+
   sealed trait Context
   final class DeviceContext extends Context
   final class RemoteContext extends Context

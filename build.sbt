@@ -38,7 +38,8 @@ ThisBuild / scalacOptions ++= Seq(
   "-explain",
   "-experimental",
   "-Xcheck-macros",
-  "-Yretain-trees"
+  "-Yretain-trees",
+  "-Xprint:all"
 )
 
 lazy val root = project //crossProject(JSPlatform, JVMPlatform, NativePlatform)
