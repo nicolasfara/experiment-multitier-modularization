@@ -1,16 +1,20 @@
 package it.unibo.capabilities
 
+import it.unibo.capabilities.Placed.{PlacedType, TiedTo}
+import it.unibo.capabilities.TypeUtils.placedTypeRepr
+
+import scala.collection.mutable
 import scala.compiletime.erasedValue
 
 trait Network
-
-type PlacedType = { type Tie }
 
 class Placed:
   self: Network =>
   type LocalPlace <: PlacedType
 
-  private enum PlacedValue[+V, P <: PlacedType]:
+  private val multitierCall = mutable.Map[String, Int]()
+
+  private enum PlacedValue[+V, +P <: PlacedType]:
     case Remote(resourceReference: String)
     case Local(value: V, resourceReference: String)
 
@@ -18,32 +22,37 @@ class Placed:
 
   class Locally[LP]
 
-  def asLocal[V, P <: PlacedType, LP <: { type Tie <: P }](placed: V at P)(using unwrap: Locally[LP]): V =
+  def asLocal[V, P <: PlacedType, Local <: TiedTo[P]](placed: V at P)(using l: Locally[Local]): V =
     import PlacedValue.*
     placed match
       case Remote(resourceReference) => ??? // Something with network call
       case Local(value, _)           => value
 
   class PlaceContext[P <: PlacedType]:
-    inline def apply[V](inline body: Locally[P] ?=> V): V at P =
+    inline def apply[V](body: Locally[P] ?=> V): V at P =
       import PlacedValue.*
       given Locally[P]()
+      val typeRepr = placedTypeRepr[P]
+      val occurrencyCount = multitierCall.getOrElse(typeRepr, 0)
+      multitierCall(typeRepr) = occurrencyCount + 1
       inline erasedValue[P] match
-        case _: LocalPlace => Local(body, "???")
-        case _             => Remote("???")
+        case _: LocalPlace => Local(body, s"$typeRepr:$occurrencyCount")
+        case _             => Remote(s"$typeRepr:$occurrencyCount")
 
   def placed[P <: PlacedType]: PlaceContext[P] = PlaceContext[P]()
 
 object Placed:
   type PlacedAt[Peer <: PlacedType] = Placed { type LocalPlace = Peer }
+  type PlacedType = { type Tie }
+  type TiedTo[P <: PlacedType] = { type Tie <: P }
 
-  def placed[P <: PlacedType](using placed: Placed): placed.PlaceContext[P] =
-    placed.placed
+  def placed[P <: PlacedType](using p: Placed): p.PlaceContext[P] =
+    p.placed
 
-  def asLocal[V, P <: PlacedType, LP <: { type Tie <: P }](using
-      placed: Placed,
-      u: placed.Locally[LP]
-  )(place: placed.at[V, P]): V = placed.asLocal(place)
+  def asLocal[V, P <: PlacedType, Local <: TiedTo[P]](using
+      p: Placed,
+      u: p.Locally[Local]
+  )(place: p.at[V, P]): V = p.asLocal(place)
 
   class PlacedNetwork[P <: PlacedType](network: Network) extends Placed, Network:
     override type LocalPlace = P
@@ -57,22 +66,29 @@ object MApp extends App:
   type Server <: { type Tie <: Client }
 
   import Placed.*
-//  import Body.given
+
+  inline def placedValueOn[P <: PlacedType](using Placed) = placed[P]:
+    42
+
+  inline def processClientValueOnServer(using p: Placed)(input: p.at[Int, Client]) = placed[Server]:
+    val localValue = asLocal(input)
+    localValue * 2
 
   inline def myApp[P <: PlacedType](using PlacedAt[P]): Unit =
-    val clientRes = placed[Client](10)
+    val clientRes = placedValueOn[Client]
+    val clientRes2 = placedValueOn[Client]
     println(s"clientRes: $clientRes")
-    val doubled = placed[Server]:
-      val onServer = asLocal(clientRes)
-      onServer * 2
+    println(s"clientRes2: $clientRes2")
+    val doubled = processClientValueOnServer(clientRes)
     println(s"doubled: $doubled")
     placed[Client](println(asLocal(doubled)))
 
+  // ------------- Endpoint Projection
   private val network = new Network {}
-//  private val clientRes = multitier[Unit, Client](network)(myApp)
-//  println(clientRes)
-  private val serverRes = multitier[Unit, Server](network)(myApp)
-  println(serverRes)
+  private val clientRes = multitier[Unit, Client](network)(myApp)
+  println(clientRes)
+//  private val serverRes = multitier[Unit, Server](network)(myApp)
+//  println(serverRes)
 
 //trait Placed:
 //  type Placement
