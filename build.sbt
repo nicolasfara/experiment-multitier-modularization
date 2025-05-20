@@ -24,6 +24,7 @@ ThisBuild / developers := List(
 )
 ThisBuild / libraryDependencies ++= Seq(
   "ch.epfl.lamp" %%% "gears" % "0.2.0",
+  "com.softwaremill.ox" %%% "core" % "0.5.13",
   "org.typelevel" %%% "cats-core" % "2.12.0",
   "org.scalatest" %%% "scalatest" % "3.2.19" % Test
 )
