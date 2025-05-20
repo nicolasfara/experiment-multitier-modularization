@@ -2,11 +2,13 @@ package it.unibo.capabilities
 
 import it.unibo.capabilities.Placed.{PlacedType, TiedTo}
 import it.unibo.capabilities.TypeUtils.placedTypeRepr
-import ox.{Ox, supervised}
+import ox.Ox
 
+import scala.annotation.implicitNotFound
 import scala.collection.mutable
 import scala.compiletime.erasedValue
 
+@implicitNotFound("To execute a multitier application, the `multitier` function must provide the corresponding handler")
 class Placed(using Ox):
   self: Network =>
   type LocalPlace <: PlacedType
@@ -50,7 +52,7 @@ object Placed:
 
   def asLocal[V, P <: PlacedType, Local <: TiedTo[P]](using
       p: Placed,
-      u: p.Locally[Local],
+      @implicitNotFound("Trying to access to a placed value from a peer not tied to the local one") u: p.Locally[Local]
   )(place: p.at[V, P]): V = p.asLocal(place)
 
   private class PlacedNetwork[P <: PlacedType](network: Network)(using Ox) extends Placed, Network:
