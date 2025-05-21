@@ -66,14 +66,14 @@ object Placed:
 
   def asLocal[V, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](using
       p: Placed,
-      @implicitNotFound("Trying to access to a placed value from a peer not tied to the local one") u: p.Locally[Local]
+      @implicitNotFound("Trying to access to a placed value from a peer not tied to the local one")
+      u: p.Locally[Local]
   )(place: p.at[V, Remote]): V = p.asLocal(place)
 
   def asLocalAll[V, Remote <: PlacedType, Local <: TiedMultipleTo[Remote]](using
       p: Placed,
-      /*@implicitNotFound("Trying to access to a placed value from a peer not tied to the local one")*/ u: p.Locally[
-        Local
-      ]
+      @implicitNotFound("Trying to access to a placed value from multiple peers not tied to the local one")
+      u: p.Locally[Local]
   )(place: p.at[V, Remote]): Seq[V] = p.asLocalAll(place)
 
   private class PlacedNetwork[P <: PlacedType](network: Network)(using Ox) extends Placed, Network:
