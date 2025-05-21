@@ -3,6 +3,7 @@ package it.unibo.capabilities
 import it.unibo.capabilities.Multitier.{Placed, at}
 import it.unibo.capabilities.Multitier.Placed.*
 import it.unibo.capabilities.Multitier.Placed.Quantifier.{Multiple, Single}
+import ox.flow.Flow
 import ox.{ExitCode, Ox, OxApp, sleep}
 
 import scala.collection.mutable
@@ -34,6 +35,8 @@ object PlacedMain extends OxApp:
         sleep(2.seconds)
         inbound(from).asInstanceOf[V]
       override def registerResult[V](produced: String, value: V): Unit = outbound(produced) = value
+      override def receiveFlowFrom[V](from: String)(using Ox): Flow[V] = ???
+      override def registerFlowResult[V](produced: String, value: Flow[V]): Unit = ???
 
     val fakeServerNetwork = new Network:
       private val outbound = mutable.Map[String, Any]()
@@ -42,6 +45,8 @@ object PlacedMain extends OxApp:
         sleep(2.seconds)
         inbound(from).asInstanceOf[V]
       override def registerResult[V](produced: String, value: V): Unit = outbound(produced) = value
+      override def receiveFlowFrom[V](from: String)(using Ox): Flow[V] = ???
+      override def registerFlowResult[V](produced: String, value: Flow[V]): Unit = ???
 
     val clientRes = multitier[Unit, Client](fakeClientNetwork)(myApp)
     println(clientRes)
