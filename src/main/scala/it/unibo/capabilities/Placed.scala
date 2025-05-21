@@ -4,8 +4,9 @@ import it.unibo.capabilities.Placed.Quantifier.{Multiple, Single}
 import it.unibo.capabilities.Placed.{PlacedType, TiedMultipleTo, TiedSingleTo}
 import it.unibo.capabilities.TypeUtils.placedTypeRepr
 import ox.Ox
+import ox.flow.Flow
 
-import scala.annotation.implicitNotFound
+import scala.annotation.{implicitNotFound, targetName}
 import scala.collection.mutable
 import scala.compiletime.erasedValue
 
@@ -16,13 +17,21 @@ class Placed(using Ox):
 
   private val multitierCall = mutable.Map[String, Int]()
 
+  infix opaque type at[+V, P <: PlacedType] = PlacedValue[V, P]
+  infix opaque type flowAt[+V, P <: PlacedType] = PlacedValue[Flow[V], P]
   private enum PlacedValue[+V, +P <: PlacedType]:
     case Remote(resourceReference: String)
     case Local(value: V, resourceReference: String)
 
-  infix opaque type at[+V, P <: PlacedType] = PlacedValue[V, P]
-
   class Locally[+LP]
+
+  def asLocalFlow[V, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](placedFlow: V flowAt Remote)(using
+      Locally[Local]
+  ): Flow[V] =
+    import PlacedValue.*
+    placedFlow match
+      case Remote(resourceReference) => ???
+      case Local(value, _)           => value
 
   def asLocal[V, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](placed: V at Remote)(using Locally[Local]): V =
     import PlacedValue.*
@@ -48,6 +57,8 @@ class Placed(using Ox):
         case _: LocalPlace => Local(body, s"$typeRepr:$count")
         case _             => Remote(s"$typeRepr:$count")
 
+    inline def flowable[V](inline body: Locally[P] ?=> Flow[V]): V flowAt P = ???
+
   def placed[P <: PlacedType]: PlaceContext[P] =
     PlaceContext[P](using Locally[P]())
 
@@ -63,6 +74,11 @@ object Placed:
 
   def placed[P <: PlacedType](using p: Placed): p.PlaceContext[P] =
     p.placed
+
+  def asLocalFlow[V, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](using
+      p: Placed,
+      l: p.Locally[Local]
+  )(placedFlow: p.flowAt[V, Remote]): Flow[V] = p.asLocalFlow(placedFlow)
 
   def asLocal[V, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](using
       p: Placed,
