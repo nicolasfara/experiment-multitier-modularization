@@ -1,6 +1,8 @@
 package it.unibo.capabilities
 
-import it.unibo.capabilities.Placed.Quantifier.{Multiple, Single}
+import it.unibo.capabilities.Multitier.{Placed, at}
+import it.unibo.capabilities.Multitier.Placed.*
+import it.unibo.capabilities.Multitier.Placed.Quantifier.{Multiple, Single}
 import ox.{ExitCode, Ox, OxApp, sleep}
 
 import scala.collection.mutable
@@ -10,13 +12,11 @@ object PlacedMain extends OxApp:
   type Client <: { type Tie <: Single[Server] }
   type Server <: { type Tie <: Multiple[Client] }
 
-  import Placed.*
-
   inline def placedValueOn[P <: PlacedType](using Placed) = placed[P]:
     println("Generating a value into the Client")
     42
 
-  inline def processClientValueOnServer(using p: Placed)(input: p.at[Int, Client]) = placed[Server]:
+  inline def processClientValueOnServer(using Placed)(input: Int at Client) = placed[Server]:
     val localValue = asLocalAll(input)
     println(s"Double $localValue on the Server")
     localValue.sum * 2

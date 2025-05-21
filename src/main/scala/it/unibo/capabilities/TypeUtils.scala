@@ -1,6 +1,6 @@
 package it.unibo.capabilities
 
-import it.unibo.capabilities.Placed.PlacedType
+import it.unibo.capabilities.Multitier.Placed.PlacedType
 
 import scala.quoted.{Expr, Quotes, Type}
 
