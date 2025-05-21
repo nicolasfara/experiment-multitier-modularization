@@ -1,13 +1,14 @@
 package it.unibo.capabilities
 
+import it.unibo.capabilities.Placed.Quantifier.{Multiple, Single}
 import ox.{ExitCode, Ox, OxApp, sleep}
 
 import scala.collection.mutable
 import scala.concurrent.duration.DurationInt
 
 object PlacedMain extends OxApp:
-  type Client <: { type Tie <: Server }
-  type Server <: { type Tie <: Client }
+  type Client <: { type Tie <: Single[Server] }
+  type Server <: { type Tie <: Multiple[Client] }
 
   import Placed.*
 
@@ -16,9 +17,9 @@ object PlacedMain extends OxApp:
     42
 
   inline def processClientValueOnServer(using p: Placed)(input: p.at[Int, Client]) = placed[Server]:
-    val localValue = asLocal(input)
+    val localValue = asLocalAll(input)
     println(s"Double $localValue on the Server")
-    localValue * 2
+    localValue.sum * 2
 
   inline def myApp[P <: PlacedType](using PlacedAt[P]): Unit =
     val clientRes = placedValueOn[Client]

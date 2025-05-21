@@ -1,6 +1,7 @@
 package it.unibo.capabilities
 
-import it.unibo.capabilities.Placed.{PlacedType, TiedTo}
+import it.unibo.capabilities.Placed.Quantifier.{Multiple, Single}
+import it.unibo.capabilities.Placed.{PlacedType, TiedMultipleTo, TiedSingleTo}
 import it.unibo.capabilities.TypeUtils.placedTypeRepr
 import ox.Ox
 
@@ -21,18 +22,25 @@ class Placed(using Ox):
 
   infix opaque type at[+V, P <: PlacedType] = PlacedValue[V, P]
 
-  class Locally[LP]
+  class Locally[+LP]
 
-  def asLocal[V, P <: PlacedType, Local <: TiedTo[P]](placed: V at P)(using l: Locally[Local]): V =
+  def asLocal[V, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](placed: V at Remote)(using Locally[Local]): V =
     import PlacedValue.*
     placed match
       case Remote(resourceReference) => receiveFrom(resourceReference) // Something with network call
       case Local(value, _)           => value
 
-  class PlaceContext[P <: PlacedType]:
-    inline def apply[V](body: Locally[P] ?=> V): V at P =
+  def asLocalAll[V, Remote <: PlacedType, Local <: TiedMultipleTo[Remote]](placed: V at Remote)(using
+      Locally[Local]
+  ): Seq[V] =
+    import PlacedValue.*
+    placed match
+      case Remote(resourceReference) => ???
+      case Local(value, _)           => Seq(value)
+
+  class PlaceContext[P <: PlacedType](using Locally[P]):
+    inline def apply[V](inline body: Locally[P] ?=> V): V at P =
       import PlacedValue.*
-      given Locally[P]()
       val typeRepr = placedTypeRepr[P]
       val count = multitierCall.getOrElse(typeRepr, 0)
       multitierCall(typeRepr) = count + 1
@@ -40,20 +48,33 @@ class Placed(using Ox):
         case _: LocalPlace => Local(body, s"$typeRepr:$count")
         case _             => Remote(s"$typeRepr:$count")
 
-  def placed[P <: PlacedType]: PlaceContext[P] = PlaceContext[P]()
+  def placed[P <: PlacedType]: PlaceContext[P] =
+    PlaceContext[P](using Locally[P]())
 
 object Placed:
-  type PlacedAt[Peer <: PlacedType] = Placed { type LocalPlace = Peer }
   type PlacedType = { type Tie }
-  type TiedTo[P <: PlacedType] = { type Tie <: P }
+  type PlacedAt[Peer <: PlacedType] = Placed { type LocalPlace = Peer }
+  type TiedSingleTo[+P <: PlacedType] = { type Tie <: Single[P] }
+  type TiedMultipleTo[+P <: PlacedType] = { type Tie <: Multiple[P] }
+
+  enum Quantifier[+P <: PlacedType]:
+    case Single()
+    case Multiple()
 
   def placed[P <: PlacedType](using p: Placed): p.PlaceContext[P] =
     p.placed
 
-  def asLocal[V, P <: PlacedType, Local <: TiedTo[P]](using
+  def asLocal[V, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](using
       p: Placed,
       @implicitNotFound("Trying to access to a placed value from a peer not tied to the local one") u: p.Locally[Local]
-  )(place: p.at[V, P]): V = p.asLocal(place)
+  )(place: p.at[V, Remote]): V = p.asLocal(place)
+
+  def asLocalAll[V, Remote <: PlacedType, Local <: TiedMultipleTo[Remote]](using
+      p: Placed,
+      /*@implicitNotFound("Trying to access to a placed value from a peer not tied to the local one")*/ u: p.Locally[
+        Local
+      ]
+  )(place: p.at[V, Remote]): Seq[V] = p.asLocalAll(place)
 
   private class PlacedNetwork[P <: PlacedType](network: Network)(using Ox) extends Placed, Network:
     override type LocalPlace = P

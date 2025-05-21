@@ -1,6 +1,6 @@
 package it.unibo.capabilities
 
-import ox.{Ox, fork}
+import ox.Ox
 
 trait Network:
   def receiveFrom[V](from: String)(using Ox): V
