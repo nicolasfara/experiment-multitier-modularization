@@ -6,7 +6,7 @@ import it.unibo.capabilities.TypeUtils.placedTypeRepr
 import ox.Ox
 import ox.flow.Flow
 
-import scala.annotation.{implicitNotFound, targetName}
+import scala.annotation.implicitNotFound
 import scala.collection.mutable
 import scala.compiletime.erasedValue
 
@@ -18,19 +18,10 @@ object Multitier:
     case Remote(resourceReference: String)
     case Local(value: V, resourceReference: String)
 
-//  class Whatever[T, O] extends (T => O)
-//
-//  object Whatever:
-//    inline given [T, P <: PlacedType]: Whatever[T, T at P] with
-//      override def apply(body: T): T at P = ???
-//
-//    inline given [T, P <: PlacedType]: Whatever[T, T flowAt P] with
-//      override def apply(body: Flow[T]): T flowAt P = ???
-
   @implicitNotFound(
     "To execute a multitier application, the `multitier` function must provide the corresponding handler"
   )
-  class Placed(using Ox):
+  trait Placed(using Ox):
     self: Network =>
     type LocalPlace <: PlacedType
 
@@ -51,7 +42,7 @@ object Multitier:
     ): V =
       import PlacedValue.*
       placed match
-        case Remote(resourceReference) => receiveFrom(resourceReference) // Something with network call
+        case Remote(resourceReference) => receiveFrom(resourceReference)
         case Local(value, _)           => value
 
     def asLocalAll[V, Remote <: PlacedType, Local <: TiedMultipleTo[Remote]](placed: V at Remote)(using
@@ -113,11 +104,7 @@ object Multitier:
 
     private class PlacedNetwork[P <: PlacedType](network: Network)(using Ox) extends Placed, Network:
       override type LocalPlace = P
-      override def receiveFrom[V](from: String)(using Ox): V = network.receiveFrom(from)
-      override def registerResult[V](produced: String, value: V): Unit = network.registerResult(produced, value)
-      override def receiveFlowFrom[V](from: String)(using Ox): Flow[V] = network.receiveFlowFrom(from)
-      override def registerFlowResult[V](produced: String, value: Flow[V]): Unit =
-        network.registerFlowResult(produced, value)
+      export network.*
 
     def multitier[V, P <: PlacedType](net: Network)(application: PlacedAt[P] ?=> V)(using Ox): V =
       given PlacedNetwork[P] = PlacedNetwork[P](net)
