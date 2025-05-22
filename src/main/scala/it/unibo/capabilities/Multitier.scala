@@ -1,5 +1,6 @@
 package it.unibo.capabilities
 
+import io.circe.Decoder
 import it.unibo.capabilities.Multitier.Placed.Quantifier.{Multiple, Single}
 import it.unibo.capabilities.Multitier.Placed.{PlacedType, TiedMultipleTo, TiedSingleTo}
 import it.unibo.capabilities.TypeUtils.placedTypeRepr
@@ -36,7 +37,7 @@ object Multitier:
 
     class PlacementScope[+LP]
 
-    def asLocalFlow[V, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](placedFlow: V flowAt Remote)(using
+    def asLocalFlow[V: Decoder, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](placedFlow: V flowAt Remote)(using
         PlacementScope[Local]
     ): Flow[V] =
       import PlacedValue.*
@@ -44,7 +45,7 @@ object Multitier:
         case Remote(resourceReference) => receiveFlowFrom(resourceReference)
         case Local(value, _)           => value
 
-    def asLocal[V, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](placed: V at Remote)(using
+    def asLocal[V: Decoder, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](placed: V at Remote)(using
         PlacementScope[Local]
     ): V =
       import PlacedValue.*
@@ -52,7 +53,7 @@ object Multitier:
         case Remote(resourceReference) => receiveFrom(resourceReference)
         case Local(value, _)           => value
 
-    def asLocalAll[V, Remote <: PlacedType, Local <: TiedMultipleTo[Remote]](placed: V at Remote)(using
+    def asLocalAll[V: Decoder, Remote <: PlacedType, Local <: TiedMultipleTo[Remote]](placed: V at Remote)(using
         PlacementScope[Local]
     ): Seq[V] =
       import PlacedValue.*
@@ -92,18 +93,18 @@ object Multitier:
     def placed[P <: PlacedType](using p: Placed): p.PlaceContext[P] =
       p.placed
 
-    def asLocalFlow[V, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](using
+    def asLocalFlow[V: Decoder, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](using
         p: Placed,
         l: p.PlacementScope[Local]
     )(placedFlow: V flowAt Remote): Flow[V] = p.asLocalFlow(placedFlow)
 
-    def asLocal[V, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](using
+    def asLocal[V: Decoder, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](using
         p: Placed,
         @implicitNotFound("Trying to access to a placed value from a peer not tied to the local one")
         u: p.PlacementScope[Local]
     )(place: V at Remote): V = p.asLocal(place)
 
-    def asLocalAll[V, Remote <: PlacedType, Local <: TiedMultipleTo[Remote]](using
+    def asLocalAll[V: Decoder, Remote <: PlacedType, Local <: TiedMultipleTo[Remote]](using
         p: Placed,
         @implicitNotFound("Trying to access to a placed value from multiple peers not tied to the local one")
         u: p.PlacementScope[Local]

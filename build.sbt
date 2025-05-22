@@ -28,6 +28,8 @@ ThisBuild / libraryDependencies ++= Seq(
   "com.softwaremill.sttp.client4" %%% "ox" % "4.0.7",
   "com.softwaremill.sttp.tapir" %%% "tapir-core" % "1.11.29",
   "com.softwaremill.sttp.tapir" %% "tapir-netty-server-sync" % "1.11.29",
+  "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % "1.11.29",
+  "com.softwaremill.sttp.client4" %% "circe" % "4.0.7",
   "org.typelevel" %%% "cats-core" % "2.12.0",
   "org.scalatest" %%% "scalatest" % "3.2.19" % Test
 )

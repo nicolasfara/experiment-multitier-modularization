@@ -1,5 +1,6 @@
 package it.unibo.capabilities
 
+import io.circe.{Decoder, Encoder}
 import it.unibo.capabilities.Multitier.{Placed, ResourceReference, at}
 import it.unibo.capabilities.Multitier.Placed.*
 import it.unibo.capabilities.Multitier.Placed.Quantifier.{Multiple, Single}
@@ -31,26 +32,26 @@ object PlacedMain extends OxApp:
     val fakeClientNetwork = new Network:
       private val outbound = mutable.Map[String, Any]()
       private val inbound = mutable.Map("it.unibo.capabilities.PlacedMain.Server:0" -> 84)
-      override def receiveFrom[V](from: ResourceReference)(using Ox): V =
+      override def receiveFrom[V: Decoder](from: ResourceReference)(using Ox): V =
         sleep(2.seconds)
         inbound(s"${from.peerName}:${from.index}").asInstanceOf[V]
-      override def registerResult[V](produced: ResourceReference, value: V): Unit =
+      override def registerResult[V: Encoder](produced: ResourceReference, value: V): Unit =
         outbound(s"${produced.peerName}:${produced.index}") = value
-      override def receiveFlowFrom[V](from: ResourceReference)(using Ox): Flow[V] = ???
-      override def registerFlowResult[V](produced: ResourceReference, value: Flow[V]): Unit = ???
-      override def receiveFromAll[V](from: ResourceReference)(using Ox): Seq[V] = ???
+      override def receiveFlowFrom[V: Decoder](from: ResourceReference)(using Ox): Flow[V] = ???
+      override def registerFlowResult[V: Encoder](produced: ResourceReference, value: Flow[V]): Unit = ???
+      override def receiveFromAll[V: Decoder](from: ResourceReference)(using Ox): Seq[V] = ???
 
     val fakeServerNetwork = new Network:
       private val outbound = mutable.Map[String, Any]()
       private val inbound = mutable.Map("it.unibo.capabilities.PlacedMain.Client:0" -> 42)
-      override def receiveFrom[V](from: ResourceReference)(using Ox): V =
+      override def receiveFrom[V: Decoder](from: ResourceReference)(using Ox): V =
         sleep(2.seconds)
         inbound(s"${from.peerName}:${from.index}").asInstanceOf[V]
-      override def registerResult[V](produced: ResourceReference, value: V): Unit =
+      override def registerResult[V: Encoder](produced: ResourceReference, value: V): Unit =
         outbound(s"${produced.peerName}:${produced.index}") = value
-      override def receiveFlowFrom[V](from: ResourceReference)(using Ox): Flow[V] = ???
-      override def registerFlowResult[V](produced: ResourceReference, value: Flow[V]): Unit = ???
-      override def receiveFromAll[V](from: ResourceReference)(using Ox): Seq[V] = ???
+      override def receiveFlowFrom[V: Decoder](from: ResourceReference)(using Ox): Flow[V] = ???
+      override def registerFlowResult[V: Encoder](produced: ResourceReference, value: Flow[V]): Unit = ???
+      override def receiveFromAll[V: Decoder](from: ResourceReference)(using Ox): Seq[V] = ???
 
     val clientRes = multitier[Unit, Client](fakeClientNetwork)(myApp)
     println(clientRes)
