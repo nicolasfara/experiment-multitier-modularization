@@ -18,6 +18,7 @@ import sttp.tapir.json.circe.*
 import io.circe.syntax.*
 import io.circe.parser.decode
 import it.unibo.capabilities.Multitier.ValueType.Value
+import ox.resilience.{RetryConfig, retry}
 
 import scala.collection.mutable
 import scala.concurrent.duration.DurationInt
@@ -27,7 +28,7 @@ trait Network:
   def receiveFromAll[V: Decoder](from: ResourceReference)(using Ox): Seq[V]
   def receiveFlowFrom[V: Decoder](from: ResourceReference)(using Ox): Flow[V]
   def registerResult[V: Encoder](produced: ResourceReference, value: V): Unit
-  def registerFlowResult[V: Encoder](produced: ResourceReference, value: Flow[V]): Unit
+  def registerFlowResult[V](produced: ResourceReference, value: Flow[V]): Unit
   def startNetwork(using Ox): Unit = ()
 
 class WsNetwork(
@@ -67,16 +68,19 @@ class WsNetwork(
       case _                               => throw new Exception("Invalid WebSocket frame")
     })
 
-  override def registerFlowResult[V: Encoder](produced: ResourceReference, value: Flow[V]): Unit =
+  override def registerFlowResult[V](produced: ResourceReference, value: Flow[V]): Unit =
     flowResources(produced.index) = value
 
   private def requestPeer[V: Decoder](ip: String, port: Int, request: ResourceReference)(using Ox): Option[V] =
-    val content = if (request.valueType == Multitier.ValueType.Flow) "flow" else "value"
-    val result = basicRequest
-      .get(uri"http://$ip:$port/values?$content=${request.index}")
-      .response(asJson[V])
-      .send(backend)
-    result.body.toOption
+    retry(RetryConfig.backoff(100, 500.milliseconds)):
+      val result = basicRequest
+        .get(uri"http://$ip:$port/values?path=${request.index}")
+        .response(asJson[V])
+        .send(backend)
+      result.body.fold(
+        error => throw Exception("Error in request: " + error),
+        value => Some(value)
+      )
 
   override def receiveFrom[V: Decoder](from: ResourceReference)(using Ox): V =
     singleTied

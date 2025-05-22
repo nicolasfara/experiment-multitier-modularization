@@ -1,6 +1,6 @@
 package it.unibo.capabilities
 
-import io.circe.Decoder
+import io.circe.{Decoder, Encoder}
 import it.unibo.capabilities.Multitier.Placed.Quantifier.{Multiple, Single}
 import it.unibo.capabilities.Multitier.Placed.{PlacedType, TiedMultipleTo, TiedSingleTo}
 import it.unibo.capabilities.TypeUtils.placedTypeRepr
@@ -29,8 +29,7 @@ object Multitier:
   @implicitNotFound(
     "To execute a multitier application, the `multitier` function must provide the corresponding handler"
   )
-  trait Placed(using Ox):
-    self: Network =>
+  trait Placed(using Ox, Network):
     type LocalPlace <: PlacedType
 
     private val multitierCall = mutable.Map[String, Int]()
@@ -42,7 +41,7 @@ object Multitier:
     ): Flow[V] =
       import PlacedValue.*
       placedFlow match
-        case Remote(resourceReference) => receiveFlowFrom(resourceReference)
+        case Remote(resourceReference) => summon[Network].receiveFlowFrom(resourceReference)
         case Local(value, _)           => value
 
     def asLocal[V: Decoder, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](placed: V at Remote)(using
@@ -50,7 +49,7 @@ object Multitier:
     ): V =
       import PlacedValue.*
       placed match
-        case Remote(resourceReference) => receiveFrom(resourceReference)
+        case Remote(resourceReference) => summon[Network].receiveFrom(resourceReference)
         case Local(value, _)           => value
 
     def asLocalAll[V: Decoder, Remote <: PlacedType, Local <: TiedMultipleTo[Remote]](placed: V at Remote)(using
@@ -58,13 +57,13 @@ object Multitier:
     ): Seq[V] =
       import PlacedValue.*
       placed match
-        case Remote(resourceReference) => receiveFromAll(resourceReference)
+        case Remote(resourceReference) => summon[Network].receiveFromAll(resourceReference)
         case Local(value, _)           => Seq(value)
 
     class PlaceContext[P <: PlacedType](using PlacementScope[P]):
-      inline def flowable[V](inline body: PlacementScope[P] ?=> Flow[V]): V flowAt P = applyable(body, true)
-      inline def apply[V](inline body: PlacementScope[P] ?=> V): V at P = applyable(body, false)
-      private inline def applyable[V, O <: PlacedType](
+      inline def flowable[V](inline body: PlacementScope[P] ?=> Flow[V]): V flowAt P = ??? // applyable(body, false)
+      inline def apply[V: Encoder](inline body: PlacementScope[P] ?=> V): V at P = applyable(body, false)
+      private inline def applyable[V: Encoder, O <: PlacedType](
           body: PlacementScope[P] ?=> V,
           isFlow: Boolean
       ): PlacedValue[V, O] =
@@ -74,10 +73,13 @@ object Multitier:
         multitierCall(typeRepr) = count + 1
         val resReference = ResourceReference(typeRepr, count, if isFlow then ValueType.Flow else ValueType.Value)
         inline erasedValue[P] match
-          case _: LocalPlace => Local(body, resReference)
-          case _             => Remote(resReference)
+          case _: LocalPlace =>
+            val result = body
+            summon[Network].registerResult(resReference, result)
+            Local(result, resReference)
+          case _ => Remote(resReference)
 
-    def placed[P <: PlacedType]: PlaceContext[P] =
+    inline def placed[P <: PlacedType]: PlaceContext[P] =
       PlaceContext[P](using PlacementScope[P]())
 
   object Placed:
@@ -90,7 +92,7 @@ object Multitier:
       case Single()
       case Multiple()
 
-    def placed[P <: PlacedType](using p: Placed): p.PlaceContext[P] =
+    inline def placed[P <: PlacedType](using p: Placed): p.PlaceContext[P] =
       p.placed
 
     def asLocalFlow[V: Decoder, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](using
@@ -110,10 +112,10 @@ object Multitier:
         u: p.PlacementScope[Local]
     )(place: V at Remote): Seq[V] = p.asLocalAll(place)
 
-    private class PlacedNetwork[P <: PlacedType](network: Network)(using Ox) extends Placed, Network:
+    private class PlacedNetwork[P <: PlacedType](using Ox, Network) extends Placed:
       override type LocalPlace = P
-      export network.*
 
-    def multitier[V, P <: PlacedType](net: Network)(application: PlacedAt[P] ?=> V)(using Ox): V =
-      given PlacedNetwork[P] = PlacedNetwork[P](net)
+    def multitier[V, P <: PlacedType](application: PlacedAt[P] ?=> V)(using Ox, Network): V =
+      given PlacedNetwork[P] = PlacedNetwork[P]()
+      summon[Network].startNetwork
       application
