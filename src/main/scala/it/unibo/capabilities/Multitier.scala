@@ -14,9 +14,16 @@ object Multitier:
   infix opaque type at[+V, P <: PlacedType] = PlacedValue[V, P]
   infix opaque type flowAt[+V, P <: PlacedType] = PlacedValue[Flow[V], P]
 
+  enum ValueType:
+    case Flow
+    case Value
+
+  final case class ResourceReference(peerName: String, index: Int, valueType: ValueType):
+    override def toString: String = s"$peerName@$index[$valueType]"
+
   private enum PlacedValue[+V, +P <: PlacedType]:
-    case Remote(resourceReference: String)
-    case Local(value: V, resourceReference: String)
+    case Remote(resourceReference: ResourceReference)
+    case Local(value: V, resourceReference: ResourceReference)
 
   @implicitNotFound(
     "To execute a multitier application, the `multitier` function must provide the corresponding handler"
@@ -50,7 +57,7 @@ object Multitier:
     ): Seq[V] =
       import PlacedValue.*
       placed match
-        case Remote(resourceReference) => ???
+        case Remote(resourceReference) => receiveFromAll(resourceReference)
         case Local(value, _)           => Seq(value)
 
     class PlaceContext[P <: PlacedType](using PlacementScope[P]):
@@ -64,10 +71,10 @@ object Multitier:
         val typeRepr = placedTypeRepr[P]
         val count = multitierCall.getOrElse(typeRepr, 0)
         multitierCall(typeRepr) = count + 1
-        val strRepr = s"$typeRepr:${if isFlow then "flow:" else ""}$count"
+        val resReference = ResourceReference(typeRepr, count, if isFlow then ValueType.Flow else ValueType.Value)
         inline erasedValue[P] match
-          case _: LocalPlace => Local(body, strRepr)
-          case _             => Remote(strRepr)
+          case _: LocalPlace => Local(body, resReference)
+          case _             => Remote(resReference)
 
     def placed[P <: PlacedType]: PlaceContext[P] =
       PlaceContext[P](using PlacementScope[P]())

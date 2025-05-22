@@ -1,6 +1,6 @@
 package it.unibo.capabilities
 
-import it.unibo.capabilities.Multitier.{Placed, at}
+import it.unibo.capabilities.Multitier.{Placed, ResourceReference, at}
 import it.unibo.capabilities.Multitier.Placed.*
 import it.unibo.capabilities.Multitier.Placed.Quantifier.{Multiple, Single}
 import ox.flow.Flow
@@ -13,16 +13,16 @@ object PlacedMain extends OxApp:
   type Client <: { type Tie <: Single[Server] }
   type Server <: { type Tie <: Multiple[Client] }
 
-  inline def placedValueOn[P <: PlacedType](using Placed) = placed[P]:
+  private inline def placedValueOn[P <: PlacedType](using Placed) = placed[P]:
     println("Generating a value into the Client")
     42
 
-  inline def processClientValueOnServer(using Placed)(input: Int at Client) = placed[Server]:
+  private inline def processClientValueOnServer(using Placed)(input: Int at Client) = placed[Server]:
     val localValue = asLocalAll(input)
     println(s"Double $localValue on the Server")
     localValue.sum * 2
 
-  inline def myApp[P <: PlacedType](using PlacedAt[P]): Unit =
+  private inline def myApp[P <: PlacedType](using PlacedAt[P]): Unit =
     val clientRes = placedValueOn[Client]
     val doubled = processClientValueOnServer(clientRes)
     placed[Client](println(s"Client received: ${asLocal(doubled)}"))
@@ -31,22 +31,26 @@ object PlacedMain extends OxApp:
     val fakeClientNetwork = new Network:
       private val outbound = mutable.Map[String, Any]()
       private val inbound = mutable.Map("it.unibo.capabilities.PlacedMain.Server:0" -> 84)
-      override def receiveFrom[V](from: String)(using Ox): V =
+      override def receiveFrom[V](from: ResourceReference)(using Ox): V =
         sleep(2.seconds)
-        inbound(from).asInstanceOf[V]
-      override def registerResult[V](produced: String, value: V): Unit = outbound(produced) = value
-      override def receiveFlowFrom[V](from: String)(using Ox): Flow[V] = ???
-      override def registerFlowResult[V](produced: String, value: Flow[V]): Unit = ???
+        inbound(s"${from.peerName}:${from.index}").asInstanceOf[V]
+      override def registerResult[V](produced: ResourceReference, value: V): Unit =
+        outbound(s"${produced.peerName}:${produced.index}") = value
+      override def receiveFlowFrom[V](from: ResourceReference)(using Ox): Flow[V] = ???
+      override def registerFlowResult[V](produced: ResourceReference, value: Flow[V]): Unit = ???
+      override def receiveFromAll[V](from: ResourceReference)(using Ox): Seq[V] = ???
 
     val fakeServerNetwork = new Network:
       private val outbound = mutable.Map[String, Any]()
       private val inbound = mutable.Map("it.unibo.capabilities.PlacedMain.Client:0" -> 42)
-      override def receiveFrom[V](from: String)(using Ox): V =
+      override def receiveFrom[V](from: ResourceReference)(using Ox): V =
         sleep(2.seconds)
-        inbound(from).asInstanceOf[V]
-      override def registerResult[V](produced: String, value: V): Unit = outbound(produced) = value
-      override def receiveFlowFrom[V](from: String)(using Ox): Flow[V] = ???
-      override def registerFlowResult[V](produced: String, value: Flow[V]): Unit = ???
+        inbound(s"${from.peerName}:${from.index}").asInstanceOf[V]
+      override def registerResult[V](produced: ResourceReference, value: V): Unit =
+        outbound(s"${produced.peerName}:${produced.index}") = value
+      override def receiveFlowFrom[V](from: ResourceReference)(using Ox): Flow[V] = ???
+      override def registerFlowResult[V](produced: ResourceReference, value: Flow[V]): Unit = ???
+      override def receiveFromAll[V](from: ResourceReference)(using Ox): Seq[V] = ???
 
     val clientRes = multitier[Unit, Client](fakeClientNetwork)(myApp)
     println(clientRes)

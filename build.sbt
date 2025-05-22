@@ -25,6 +25,9 @@ ThisBuild / developers := List(
 ThisBuild / libraryDependencies ++= Seq(
   "ch.epfl.lamp" %%% "gears" % "0.2.0",
   "com.softwaremill.ox" %%% "core" % "0.5.13",
+  "com.softwaremill.sttp.client4" %%% "ox" % "4.0.7",
+  "com.softwaremill.sttp.tapir" %%% "tapir-core" % "1.11.29",
+  "com.softwaremill.sttp.tapir" %% "tapir-netty-server-sync" % "1.11.29",
   "org.typelevel" %%% "cats-core" % "2.12.0",
   "org.scalatest" %%% "scalatest" % "3.2.19" % Test
 )
