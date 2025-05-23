@@ -14,16 +14,16 @@ object PlacedMain:
   type Client <: { type Tie <: Single[Server] }
   type Server <: { type Tie <: Single[Client] }
 
-  private inline def placedValueOn[P <: PlacedType](using Placed) = placed[P]:
+  private inline def placedValueOn[P <: PlacedType](using Placed, Ox) = placed[P]:
     println("Generating a value into the Client")
     54
 
-  private inline def processClientValueOnServer(using Placed)(input: Int at Client) = placed[Server]:
+  private inline def processClientValueOnServer(using Placed, Ox)(input: Int at Client) = placed[Server]:
     val localValue = asLocal(input)
     println(s"Double $localValue on the Server")
     localValue * 2
 
-  inline def myApp[P <: PlacedType](using PlacedAt[P]): Unit =
+  inline def myApp[P <: PlacedType](using PlacedAt[P], Ox): Unit =
     val clientRes = placedValueOn[Client]
     val doubled = processClientValueOnServer(clientRes)
     placed[Client](println(s"Client received: ${asLocal(doubled)}"))

@@ -12,14 +12,14 @@ object FlowMain extends OxApp:
   type Client <: { type Tie <: Single[Server] }
   type Server <: { type Tie <: Single[Client] }
 
-  inline def eventFromClient(using Placed) = placed[Client].flowable:
+  inline def eventFromClient(using Placed, Ox) = placed[Client].flowable:
     Flow.tick(1.second, "hello").take(10)
 
-  inline def processClientEventsOnServer(using Placed)(input: String flowAt Client) = placed[Server]:
+  inline def processClientEventsOnServer(using Placed, Ox)(input: String flowAt Client) = placed[Server]:
     val collectedEvents = asLocalFlow(input)
     println(s"Collected from client: ${collectedEvents.runToList()}")
 
-  inline def myFlowApp[P <: PlacedType](using PlacedAt[P]) =
+  inline def myFlowApp[P <: PlacedType](using PlacedAt[P], Ox) =
     val clientEvents = eventFromClient
     processClientEventsOnServer(clientEvents)
 

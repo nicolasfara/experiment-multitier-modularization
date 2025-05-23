@@ -4,14 +4,17 @@ import io.circe.{Decoder, Encoder}
 import it.unibo.capabilities.Multitier.Placed.Quantifier.{Multiple, Single}
 import it.unibo.capabilities.Multitier.Placed.{PlacedType, TiedMultipleTo, TiedSingleTo}
 import it.unibo.capabilities.TypeUtils.placedTypeRepr
-import ox.Ox
+import ox.{Ox, supervised}
 import ox.flow.Flow
 
-import scala.annotation.implicitNotFound
+import scala.annotation.{implicitNotFound, targetName}
 import scala.collection.mutable
 import scala.compiletime.erasedValue
+import scala.reflect.ClassTag
 
 object Multitier:
+  export io.circe.generic.auto.*
+
   infix opaque type at[+V, P <: PlacedType] = PlacedValue[V, P]
   infix opaque type flowAt[+V, P <: PlacedType] = PlacedValue[Flow[V], P]
 
@@ -29,15 +32,17 @@ object Multitier:
   @implicitNotFound(
     "To execute a multitier application, the `multitier` function must provide the corresponding handler"
   )
-  trait Placed(using Ox, Network):
+  trait Placed(using Network):
     type LocalPlace <: PlacedType
 
-    private val multitierCall = mutable.Map[String, Int]()
+    private val multitierCall = scala.collection.concurrent.TrieMap[String, Int]()
+    private val multitierValueCall = scala.collection.concurrent.TrieMap[String, Int]()
 
     class PlacementScope[+LP]
 
     def asLocalFlow[V: Decoder, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](placedFlow: V flowAt Remote)(using
-        PlacementScope[Local]
+        PlacementScope[Local],
+        Ox
     ): Flow[V] =
       import PlacedValue.*
       placedFlow match
@@ -45,26 +50,36 @@ object Multitier:
         case Local(value, _)           => value
 
     def asLocal[V: Decoder, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](placed: V at Remote)(using
-        PlacementScope[Local]
+        PlacementScope[Local],
+        Ox
     ): V =
       import PlacedValue.*
       placed match
         case Remote(resourceReference) => summon[Network].receiveFrom(resourceReference)
         case Local(value, _)           => value
 
-    def asLocalAll[V: Decoder, Remote <: PlacedType, Local <: TiedMultipleTo[Remote]](placed: V at Remote)(using
+    def local[V: Decoder, Local <: PlacedType](placed: V at Local)(using
         PlacementScope[Local]
+    ): V =
+      import PlacedValue.*
+      placed match
+        case Remote(_)       => throw new Exception("The value must be local but it is not")
+        case Local(value, _) => value
+
+    def asLocalAll[V: Decoder, Remote <: PlacedType, Local <: TiedMultipleTo[Remote]](placed: V at Remote)(using
+        PlacementScope[Local],
+        Ox
     ): Seq[V] =
       import PlacedValue.*
       placed match
         case Remote(resourceReference) => summon[Network].receiveFromAll(resourceReference)
         case Local(value, _)           => Seq(value)
 
-    class PlaceContext[P <: PlacedType](using PlacementScope[P]):
+    class PlaceContext[P <: PlacedType](send: Boolean = true)(using p: PlacementScope[P], ox: Ox):
       inline def flowable[V](inline body: PlacementScope[P] ?=> Flow[V]): V flowAt P = ??? // applyable(body, false)
       inline def apply[V: Encoder](inline body: PlacementScope[P] ?=> V): V at P = applyable(body, false)
       private inline def applyable[V: Encoder, O <: PlacedType](
-          body: PlacementScope[P] ?=> V,
+          inline body: PlacementScope[P] ?=> V,
           isFlow: Boolean
       ): PlacedValue[V, O] =
         import PlacedValue.*
@@ -74,13 +89,27 @@ object Multitier:
         val resReference = ResourceReference(typeRepr, count, if isFlow then ValueType.Flow else ValueType.Value)
         inline erasedValue[P] match
           case _: LocalPlace =>
-            val result = body
-            summon[Network].registerResult(resReference, result)
-            Local(result, resReference)
+            val res = body
+            if send then summon[Network].registerResult(resReference, res)
+            Local(res, resReference)
           case _ => Remote(resReference)
 
-    inline def placed[P <: PlacedType]: PlaceContext[P] =
-      PlaceContext[P](using PlacementScope[P]())
+    class ValueContext[P <: PlacedType](using p: PlacementScope[P]):
+      inline def apply[V: Encoder](inline body: PlacementScope[P] ?=> V): V at P =
+        import PlacedValue.*
+        val typeRepr = placedTypeRepr[P]
+        val count = multitierValueCall.getOrElse(typeRepr, 0)
+        multitierValueCall(typeRepr) = count + 1
+        val resReference = ResourceReference(typeRepr, count, ValueType.Value)
+        inline erasedValue[P] match
+          case _: LocalPlace => Local(body, resReference)
+          case _ => Remote(resReference)
+
+    inline def placed[P <: PlacedType](using Ox): PlaceContext[P] =
+      PlaceContext[P](true)(using PlacementScope[P]())
+
+    inline def on[P <: PlacedType]: ValueContext[P] =
+      ValueContext[P](using PlacementScope[P]())
 
   object Placed:
     type PlacedType = { type Tie }
@@ -92,24 +121,33 @@ object Multitier:
       case Single()
       case Multiple()
 
-    inline def placed[P <: PlacedType](using p: Placed): p.PlaceContext[P] =
+    inline def placed[P <: PlacedType](using p: Placed, ox: Ox): p.PlaceContext[P] =
       p.placed
+
+    inline def on[P <: PlacedType](using p: Placed): p.ValueContext[P] =
+      p.on
 
     def asLocalFlow[V: Decoder, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](using
         p: Placed,
-        l: p.PlacementScope[Local]
+        l: p.PlacementScope[Local],
+        ox: Ox
     )(placedFlow: V flowAt Remote): Flow[V] = p.asLocalFlow(placedFlow)
 
     def asLocal[V: Decoder, Remote <: PlacedType, Local <: TiedSingleTo[Remote]](using
         p: Placed,
         @implicitNotFound("Trying to access to a placed value from a peer not tied to the local one")
-        u: p.PlacementScope[Local]
+        u: p.PlacementScope[Local],
+        ox: Ox
     )(place: V at Remote): V = p.asLocal(place)
+
+    def local[V: Decoder, Local <: PlacedType](using p: Placed, u: p.PlacementScope[Local])(place: V at Local): V =
+      p.local(place)
 
     def asLocalAll[V: Decoder, Remote <: PlacedType, Local <: TiedMultipleTo[Remote]](using
         p: Placed,
         @implicitNotFound("Trying to access to a placed value from multiple peers not tied to the local one")
-        u: p.PlacementScope[Local]
+        u: p.PlacementScope[Local],
+        ox: Ox
     )(place: V at Remote): Seq[V] = p.asLocalAll(place)
 
     private class PlacedNetwork[P <: PlacedType](using Ox, Network) extends Placed:

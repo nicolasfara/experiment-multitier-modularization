@@ -17,17 +17,15 @@ import sttp.client4.circe.*
 import sttp.tapir.json.circe.*
 import io.circe.syntax.*
 import io.circe.parser.decode
-import it.unibo.capabilities.Multitier.ValueType.Value
 import ox.resilience.{RetryConfig, retry}
 
-import scala.collection.mutable
 import scala.concurrent.duration.DurationInt
 
 trait Network:
   def receiveFrom[V: Decoder](from: ResourceReference)(using Ox): V
   def receiveFromAll[V: Decoder](from: ResourceReference)(using Ox): Seq[V]
   def receiveFlowFrom[V: Decoder](from: ResourceReference)(using Ox): Flow[V]
-  def registerResult[V: Encoder](produced: ResourceReference, value: V): Unit
+  def registerResult[V: Encoder](produced: ResourceReference, value: V)(using Ox): Unit
   def registerFlowResult[V](produced: ResourceReference, value: Flow[V]): Unit
   def startNetwork(using Ox): Unit = ()
 
@@ -36,8 +34,8 @@ class WsNetwork(
     private val multiTied: Map[String, Set[(String, Int)]],
     private val port: Int = 8080
 ) extends Network:
-  private val flowResources = mutable.Map[Int, Flow[Any]]()
-  private val valueResources = mutable.Map[Int, String]() // Already encoded
+  private val flowResources = collection.concurrent.TrieMap[Int, Flow[Any]]()
+  private val valueResources = collection.concurrent.TrieMap[Int, String]() // Already encoded
   private val httpEndpoint = endpoint.get
     .in("values")
     .in(query[Int]("path"))
@@ -51,12 +49,15 @@ class WsNetwork(
     )
   private val wsServerEndpoint = wsEndpoint.handleSuccess(_ => flowRequestPipe)
   private val httpServerEndpoint = httpEndpoint
-    .handleSuccess(path => valueResources.getOrElse(path, throw new Exception("Value not found")))
+    .handleSuccess(path =>
+      println("Incoming request for index: " + path)
+      println("Current value exists: " + valueResources.contains(path))
+      valueResources.getOrElse(path, throw new Exception("Value not found")))
   private val backend = DefaultSyncBackend()
 
   override def startNetwork(using Ox): Unit =
     NettySyncServer()
-      .host("0.0.0.0")
+      .host("localhost")
       .port(port)
       .addEndpoints(List(wsServerEndpoint, httpServerEndpoint))
       .start()
@@ -71,16 +72,20 @@ class WsNetwork(
   override def registerFlowResult[V](produced: ResourceReference, value: Flow[V]): Unit =
     flowResources(produced.index) = value
 
-  private def requestPeer[V: Decoder](ip: String, port: Int, request: ResourceReference)(using Ox): Option[V] =
-    retry(RetryConfig.backoff(100, 500.milliseconds)):
+  private def requestPeer[V: Decoder](ip: String, port: Int, request: ResourceReference)(using Ox): Option[V] = fork:
+    retry(RetryConfig.backoff(10, 500.milliseconds)):
+      println("TRYING TO REQUEST")
       val result = basicRequest
         .get(uri"http://$ip:$port/values?path=${request.index}")
         .response(asJson[V])
         .send(backend)
       result.body.fold(
-        error => throw Exception("Error in request: " + error),
+        error =>
+          println("Error on call: " + error)
+          throw Exception("Error in request: " + error),
         value => Some(value)
       )
+  .join()
 
   override def receiveFrom[V: Decoder](from: ResourceReference)(using Ox): V =
     singleTied
@@ -109,8 +114,10 @@ class WsNetwork(
           case Right(ws)   => ws
       .getOrElse(throw new Exception(s"Possible no tie to ${from.peerName}"))
 
-  override def registerResult[V: Encoder](produced: ResourceReference, value: V): Unit =
+  override def registerResult[V: Encoder](produced: ResourceReference, value: V)(using Ox): Unit = fork {
+    println(s"Registering ${produced}")
     valueResources(produced.index) = value.asJson.toString
+  }.join()
 
 object test extends OxApp:
   override def run(args: Vector[String])(using Ox): ExitCode =
