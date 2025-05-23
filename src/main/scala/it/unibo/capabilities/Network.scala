@@ -25,7 +25,7 @@ trait Network:
   def receiveFrom[V: Decoder](from: ResourceReference)(using Ox): V
   def receiveFromAll[V: Decoder](from: ResourceReference)(using Ox): Seq[V]
   def receiveFlowFrom[V: Decoder](from: ResourceReference)(using Ox): Flow[V]
-  def registerResult[V: Encoder](produced: ResourceReference, value: V)(using Ox): Unit
+  def registerResult[V: Encoder](produced: ResourceReference, value: V): Unit
   def registerFlowResult[V](produced: ResourceReference, value: Flow[V]): Unit
   def startNetwork(using Ox): Unit = ()
 
@@ -49,10 +49,7 @@ class WsNetwork(
     )
   private val wsServerEndpoint = wsEndpoint.handleSuccess(_ => flowRequestPipe)
   private val httpServerEndpoint = httpEndpoint
-    .handleSuccess(path =>
-      println("Incoming request for index: " + path)
-      println("Current value exists: " + valueResources.contains(path))
-      valueResources.getOrElse(path, throw new Exception("Value not found")))
+    .handleSuccess(path => valueResources.getOrElse(path, throw new Exception("Value not found")))
   private val backend = DefaultSyncBackend()
 
   override def startNetwork(using Ox): Unit =
@@ -74,15 +71,12 @@ class WsNetwork(
 
   private def requestPeer[V: Decoder](ip: String, port: Int, request: ResourceReference)(using Ox): Option[V] = fork:
     retry(RetryConfig.backoff(10, 500.milliseconds)):
-      println("TRYING TO REQUEST")
       val result = basicRequest
         .get(uri"http://$ip:$port/values?path=${request.index}")
         .response(asJson[V])
         .send(backend)
       result.body.fold(
-        error =>
-          println("Error on call: " + error)
-          throw Exception("Error in request: " + error),
+        error => throw Exception("Error in request: " + error),
         value => Some(value)
       )
   .join()
@@ -114,14 +108,5 @@ class WsNetwork(
           case Right(ws)   => ws
       .getOrElse(throw new Exception(s"Possible no tie to ${from.peerName}"))
 
-  override def registerResult[V: Encoder](produced: ResourceReference, value: V)(using Ox): Unit = fork {
-    println(s"Registering ${produced}")
+  override def registerResult[V: Encoder](produced: ResourceReference, value: V): Unit =
     valueResources(produced.index) = value.asJson.toString
-  }.join()
-
-object test extends OxApp:
-  override def run(args: Vector[String])(using Ox): ExitCode =
-    val net = WsNetwork(Map(), Map())
-    net.startNetwork
-    net.registerResult(ResourceReference("pippo", 0, ValueType.Value), 10)
-    never
